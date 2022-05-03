@@ -12,7 +12,7 @@ def print_hi(name):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    il.load_images("test")
+    il.load_images("test", download_segmented=True)
     # il.compare_filters("test")
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

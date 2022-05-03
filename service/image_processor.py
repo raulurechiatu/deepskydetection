@@ -3,13 +3,19 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 
 
+astronomical_objects = []
+objects_count = 0
+# Used to filter out the images that are too small for usage
+image_save_kernel_threshold = 7
+
+
 def apply_filters(img, gaussian=False, grayscale=True):
     filtered_image = img
 
     if grayscale:
         filtered_image = grayscale_filter(img)
     if gaussian:
-        filtered_image = gaussian_filter(filtered_image, sigma=1)
+        filtered_image = gaussian_filter(filtered_image, sigma=.1)
 
     return filtered_image
 
@@ -18,7 +24,10 @@ def grayscale_filter(img):
     return np.dot(img[...,:3], [0.2989, 0.5870, 0.1140])
 
 
-def identify_and_outline_objects(plt, img, outline=True):
+def identify_and_outline_objects(plt, img, outline=True, save=True):
+    global astronomical_objects, objects_count
+    astronomical_objects = []
+    objects_count = 0
     width, height = img.shape
     # Used to trigger the beginning of an astronomical body
     PIXEL_THRESHOLD = 0.7
@@ -40,6 +49,13 @@ def identify_and_outline_objects(plt, img, outline=True):
                 # Create the coords object to be drawn later from the maximum center found
                 coords = [center[0], center[1]]
                 snake = outline_object(coords, img, outline_size=kernel_size)
+
+                # Will save the image for later use if the option is enabled or
+                # if the kernel size is big enough
+                # This is done so we won't take in consideration images that are too small
+                # Hence resulting in one pixel segmented objects that will yield no results
+                if save and kernel_size > image_save_kernel_threshold:
+                    save_object(img, coords, kernel_size)
 
                 # Color the circle
                 if outline:
@@ -111,3 +127,15 @@ def get_center(img, x, y, kernel_size=5):
                     kernel_maximum = kernel[i, j]
                     x, y = x+i, y+j
     return x, y
+
+
+# Save the objects identified on the local memory for easy later usage
+# The object will be saved from the center with the kernel size identified previously
+def save_object(img, center, kernel_size):
+    global astronomical_objects, objects_count
+    step = int(kernel_size/2)
+    x, y = center[0], center[1]
+    kernel = img[x - step:x + step + 1, y - step:y + step + 1]
+    if kernel.size > 0:
+        astronomical_objects.append(kernel)
+        objects_count += 1
