@@ -10,14 +10,19 @@ images_parent_path = "images/"
 def load_images(path):
     # Load the image
     path = Path(__file__).parent / '../images/deepsky/andromeda.png'
-    image_mp = mpimg.imread(path)
-    # process_images(image_mp)
+    original = mpimg.imread(path)
 
     # Process the image
-    image_mp = image_processor.process(image_mp, gaussian=False)
+    original = image_processor.apply_filters(original, gaussian=False)
+    image_mp = original
+    f, axarr = plt.subplots(1, 2)
 
     # Display the image
-    plt.imshow(image_mp, cmap='gray')
+    image_processor.identify_and_outline_objects(axarr[1], image_mp)
+
+    axarr[0].imshow(original, cmap='gray')
+    axarr[1].imshow(image_mp, cmap='gray')
+    # plt.imshow(image_mp, cmap='gray')
     plt.show()
 
 
