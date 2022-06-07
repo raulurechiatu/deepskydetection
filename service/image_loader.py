@@ -1,43 +1,111 @@
 
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-from pathlib import Path
+import cv2
+from PIL import Image
+
 import shutil
+import os
+import time
+import numpy as np
+from pathlib import Path
 from service import image_processor
 
 
-images_parent_path = "../images/deepsky/"
 segmentation_path = "images/output/segmentation/"
-image_name = 'alfa_centauri'
+# galaxyzoo_images = []
 
 
-def load_images(path, download_segmented=False):
+def load_images(path, images_to_load=-1, offset=0):
+    # global galaxyzoo_images
+    # galaxyzoo_images = np.ndarray(shape=(424, 424, 3))
+    galaxyzoo_images = []
+    final_path = Path(__file__).parent / path
+
+    before = time.time()
+    image_names = os.listdir(final_path)
+    after = time.time()
+    print("Execution time for listdir(getting the images name) is ", (after-before), "s for ", len(image_names), " images")
+    image_number = offset
+
+    if images_to_load == -1:
+        for image_name in image_names:
+            # Here we can change the library used to load images in memory
+            galaxyzoo_images.append(load_image_matplot(path + image_name))
+
+    else:
+        for image_name in image_names:
+            image_number = image_number + 1
+            # Here we can change the library used to load images in memory
+            galaxyzoo_images.append(load_image_matplot(path + image_name))
+            if images_to_load == image_number:
+                break
+
+    after_image_load = time.time()
+    print("Execution time for loading images in memory is ", (after_image_load-after), "seconds for ", images_to_load, " images")
+    # print(galaxyzoo_images)
+
+    return galaxyzoo_images
+
+
+# Loads one image and has several options in order to download segmented images out of that or to display that image
+# This is meant for better manipulation of the data and powerful observation tools while the other function should be
+# used for bulk loading of images
+def load_image_prettified(path, download_segmented=False, display_images=False):
     # Load the image
-    path = Path(__file__).parent / images_parent_path / str(image_name + '.png')
-    original = mpimg.imread(path)
+    final_path = Path(__file__).parent / path
+    original = mpimg.imread(final_path)
 
-    # Process the image
-    original = image_processor.apply_filters(original, gaussian=True)
-    image_mp = original
-    f, axarr = plt.subplots(1, 2)
+    if display_images:
+        # Process the image
+        original = image_processor.apply_filters(original, gaussian=True)
+        image_mp = original
+        f, axarr = plt.subplots(1, 2)
 
-    # Display the image
-    image_processor.identify_and_outline_objects(axarr[1], image_mp)
+        # Display the image
+        image_processor.identify_and_outline_objects(axarr[1], image_mp)
+        axarr[0].imshow(original, cmap='gray')
+        axarr[1].imshow(image_mp, cmap='gray')
+        # plt.imshow(image_mp, cmap='gray')
+        plt.show()
 
     # Will download the images under segmentation_path variable value if the option is selected
     # The method will generate the astronomical objects segmented out of the image
     if download_segmented:
         download_segmented_objects()
 
-    axarr[0].imshow(original, cmap='gray')
-    axarr[1].imshow(image_mp, cmap='gray')
-    # plt.imshow(image_mp, cmap='gray')
-    plt.show()
+    return original
+
+
+# 10k images: 24.8s
+# 1k images: 2.3s
+# Used for an efficient way to load the images
+def load_image_matplot(path):
+    # Load the image
+    final_path = Path(__file__).parent / path
+    original = mpimg.imread(final_path)
+    # grayscale
+    # original = image_processor.apply_filters(original)
+    return original
+
+
+def load_image_cv2(path):
+    original = mpimg.imread(final_path)
+    return original
+
+
+# 1k images: 2.3s
+def load_image_pil(path):
+    final_path = Path(__file__).parent / path
+    original = Image.open(final_path)
+    # grayscale
+    # original = original.convert('L')
+    return list(original.getdata())
 
 
 def compare_filters(path):
     # Load the image
-    path = Path(__file__).parent / images_parent_path / 'andromeda.png'
+    path = Path(__file__).parent / path
     image_mp = mpimg.imread(path)
     image_mp2 = mpimg.imread(path)
     # process_images(image_mp)
