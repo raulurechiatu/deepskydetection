@@ -8,15 +8,24 @@ image_name = 'andromeda'
 
 galaxy_zoo_images_path = "../resources/galaxyzoo2/images_gz2/images/"
 
-images_to_load=1000
-
+images_to_load = 1000
+error_threshold = 0.01
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    image_name = ic.start_comparison_process(images_parent_path + str(image_name + '.png'), galaxy_zoo_images_path,
-                                             images_to_load=images_to_load)
+    identified_objects = ic.start_comparison_process(images_parent_path + str(image_name + '.png'), galaxy_zoo_images_path,
+                                              images_to_load=images_to_load, error_threshold=error_threshold)
+
+    if len(identified_objects) == 0:
+        print("No similarities found on the catalog")
+        exit()
+
+    # Load the db files and search for a filename
     db.load_dbs()
-    db.search_file(image_name)
+    db.search_file(identified_objects)
+
+    ic.display_images(identified_objects, galaxy_zoo_images_path)
+
     # il.load_images(galaxy_zoo_images_path, 2000, 0)
     # il.load_image_prettified(images_parent_path + str(image_name + '.png'), download_segmented=False, display_images=True)
 

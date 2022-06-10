@@ -83,13 +83,8 @@ def load_image_matplot(path):
     # Load the image
     final_path = Path(__file__).parent / path
     original = mpimg.imread(final_path)
-    # grayscale
-    # original = image_processor.apply_filters(original)
-    return original
-
-
-def load_image_cv2(path):
-    original = mpimg.imread(final_path)
+    # if grayscale:
+    #     original = image_processor.apply_filters(original)
     return original
 
 

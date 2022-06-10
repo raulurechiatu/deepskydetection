@@ -12,8 +12,12 @@ image_save_kernel_threshold = 7
 def apply_filters(img, gaussian=False, grayscale=True):
     filtered_image = img
 
+    # In case the values we have from the image are [0-255] we normalize them
+    if filtered_image.max() > 1:
+        filtered_image = filtered_image/255
+
     if grayscale:
-        filtered_image = grayscale_filter(img)
+        filtered_image = grayscale_filter(filtered_image)
     if gaussian:
         filtered_image = gaussian_filter(filtered_image, sigma=.1)
 
@@ -132,9 +136,12 @@ def get_center(img, x, y, kernel_size=5):
 
 # Save the objects identified on the local memory for easy later usage
 # The object will be saved from the center with the kernel size identified previously
-def save_object_in_memory(img, center, kernel_size):
+# distance_from_center parameter is used to save a kernel with this distance outside of the center of the object
+# for eg. if the object has a size of 10x10 pixels, this will save that image along with another 15x15 pixels
+# besides the object
+def save_object_in_memory(img, center, kernel_size, distance_from_center=15):
     global astronomical_objects, objects_count
-    step = int(kernel_size/2)
+    step = int(kernel_size/2)+distance_from_center
     x, y = center[0], center[1]
     kernel = img[x - step:x + step + 1, y - step:y + step + 1]
     if kernel.size > 0:
