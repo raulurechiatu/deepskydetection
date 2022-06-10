@@ -1,13 +1,11 @@
 
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-import cv2
 from PIL import Image
 
 import shutil
 import os
 import time
-import numpy as np
 from pathlib import Path
 from service import image_processor
 
@@ -28,6 +26,8 @@ def load_images(path, images_to_load=-1, offset=0):
     print("Execution time for listdir(getting the images name) is ", (after-before), "s for ", len(image_names), " images")
     image_number = offset
 
+    # The reason behind this if is to iterate more efficiently over the whole dataset without adding a check step
+    # each time
     if images_to_load == -1:
         for image_name in image_names:
             # Here we can change the library used to load images in memory
@@ -45,7 +45,7 @@ def load_images(path, images_to_load=-1, offset=0):
     print("Execution time for loading images in memory is ", (after_image_load-after), "seconds for ", images_to_load, " images")
     # print(galaxyzoo_images)
 
-    return galaxyzoo_images
+    return galaxyzoo_images, image_names
 
 
 # Loads one image and has several options in order to download segmented images out of that or to display that image
@@ -53,8 +53,7 @@ def load_images(path, images_to_load=-1, offset=0):
 # used for bulk loading of images
 def load_image_prettified(path, download_segmented=False, display_images=False):
     # Load the image
-    final_path = Path(__file__).parent / path
-    original = mpimg.imread(final_path)
+    original = load_image_matplot(path)
 
     if display_images:
         # Process the image
@@ -63,7 +62,7 @@ def load_image_prettified(path, download_segmented=False, display_images=False):
         f, axarr = plt.subplots(1, 2)
 
         # Display the image
-        image_processor.identify_and_outline_objects(axarr[1], image_mp)
+        image_processor.identify_and_outline_objects(image_mp, axarr[1])
         axarr[0].imshow(original, cmap='gray')
         axarr[1].imshow(image_mp, cmap='gray')
         # plt.imshow(image_mp, cmap='gray')

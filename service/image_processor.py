@@ -24,7 +24,7 @@ def grayscale_filter(img):
     return np.dot(img[...,:3], [0.2989, 0.5870, 0.1140])
 
 
-def identify_and_outline_objects(plt, img, outline=True, save=True):
+def identify_and_outline_objects(img, plt=0, outline=True, save=True):
     global astronomical_objects, objects_count
     astronomical_objects = []
     objects_count = 0
@@ -55,10 +55,10 @@ def identify_and_outline_objects(plt, img, outline=True, save=True):
                 # This is done so we won't take in consideration images that are too small
                 # Hence resulting in one pixel segmented objects that will yield no results
                 if save and kernel_size > image_save_kernel_threshold:
-                    save_object(img, coords, kernel_size)
+                    save_object_in_memory(img, coords, kernel_size)
 
                 # Color the circle
-                if outline:
+                if outline and plt != 0:
                     circle_color = get_outline_color(img[x, y])
                     # Plotting the object boundary marker
                     # plt.plot(contour[:, 0], contour[:, 1], '-b', lw=1)
@@ -118,6 +118,7 @@ def get_center(img, x, y, kernel_size=5):
     local_maximum = -1
     kernel_maximum = 0
     step = int(kernel_size/2)
+    # Search the vicinity of the image while there is a better maximum
     while kernel_maximum > local_maximum:
         local_maximum = kernel_maximum
         kernel = img[x-step:x+step+1, y-step:y+step+1]
@@ -131,7 +132,7 @@ def get_center(img, x, y, kernel_size=5):
 
 # Save the objects identified on the local memory for easy later usage
 # The object will be saved from the center with the kernel size identified previously
-def save_object(img, center, kernel_size):
+def save_object_in_memory(img, center, kernel_size):
     global astronomical_objects, objects_count
     step = int(kernel_size/2)
     x, y = center[0], center[1]
