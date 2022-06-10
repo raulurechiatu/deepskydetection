@@ -51,6 +51,7 @@ def load_images(path, images_to_load=-1, offset=0):
 # Loads one image and has several options in order to download segmented images out of that or to display that image
 # This is meant for better manipulation of the data and powerful observation tools while the other function should be
 # used for bulk loading of images
+# Deprecated DO NOT USE
 def load_image_prettified(path, download_segmented=False, display_images=False):
     # Load the image
     original = load_image_matplot(path)
@@ -97,6 +98,7 @@ def load_image_pil(path):
     return list(original.getdata())
 
 
+# Deprecated DO NOT USE
 def compare_filters(path):
     # Load the image
     path = Path(__file__).parent / path
