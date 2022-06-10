@@ -1,4 +1,3 @@
-
 import numpy as np
 from scipy.ndimage import gaussian_filter
 
@@ -28,7 +27,7 @@ def grayscale_filter(img):
     return np.dot(img[...,:3], [0.2989, 0.5870, 0.1140])
 
 
-def identify_and_outline_objects(img, plt=0, outline=True, save=True, distance_from_center=15):
+def identify_and_outline_objects(img, plt=0, outline=True, save=True, zoom_from_center=15):
     global astronomical_objects, objects_count
     astronomical_objects = []
     objects_count = 0
@@ -59,7 +58,7 @@ def identify_and_outline_objects(img, plt=0, outline=True, save=True, distance_f
                 # This is done so we won't take in consideration images that are too small
                 # Hence resulting in one pixel segmented objects that will yield no results
                 if save and kernel_size > image_save_kernel_threshold:
-                    save_object_in_memory(img, coords, kernel_size, distance_from_center)
+                    save_object_in_memory(img, coords, kernel_size, zoom_from_center)
 
                 # Color the circle
                 if outline and plt != 0:
@@ -139,9 +138,9 @@ def get_center(img, x, y, kernel_size=5):
 # distance_from_center parameter is used to save a kernel with this distance outside of the center of the object
 # for eg. if the object has a size of 10x10 pixels, this will save that image along with another 15x15 pixels
 # besides the object
-def save_object_in_memory(img, center, kernel_size, distance_from_center):
+def save_object_in_memory(img, center, kernel_size, zoom_from_center):
     global astronomical_objects, objects_count
-    step = int(kernel_size/2)+distance_from_center
+    step = int(kernel_size/2)+zoom_from_center
     x, y = center[0], center[1]
     kernel = img[x - step:x + step + 1, y - step:y + step + 1]
     if kernel.size > 0:

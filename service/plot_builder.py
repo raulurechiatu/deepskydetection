@@ -52,3 +52,10 @@ def display_images_one_window(identified_objects, catalog_images_path):
             row_reset_count = 0
 
     plt.show()
+
+
+def display_two_images(imageA, imageB):
+    f, axarr = plt.subplots(1, 2)
+    axarr[0].imshow(imageA, cmap='gray')
+    axarr[1].imshow(imageB, cmap='gray')
+    plt.show()
