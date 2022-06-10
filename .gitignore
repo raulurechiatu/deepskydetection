@@ -2,3 +2,4 @@
 images/output/
 resources/
 *.pyc
+service/__pycache__/
