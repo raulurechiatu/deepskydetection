@@ -24,7 +24,7 @@ def apply_filters(img, gaussian=False, grayscale=True):
 
 
 def grayscale_filter(img):
-    return np.dot(img[...,:3], [0.2989, 0.5870, 0.1140])
+    return np.dot(img[..., :3], [0.2989, 0.5870, 0.1140])
 
 
 def identify_and_outline_objects(img, plt=0, outline=True, save=True, zoom_from_center=15):

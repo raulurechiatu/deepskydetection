@@ -1,11 +1,18 @@
+import threading
 import time
+from threading import Lock
+
 from service import image_processor as ip
 from service import image_loader as il
 import numpy as np
 from service import plot_builder as plot
 from utils import progressbar
+from main import total_threads_number
 
 import cv2
+
+
+mutex = Lock()
 
 
 # A method used to start the comparison process and everything that is required to do that
@@ -27,49 +34,32 @@ def start_comparison_process(original_image_path, catalog_images_path, images_to
 # TODO: make both lists have the same size and start the comparison process
 # This method will start the algorithm for comparison of two images
 # It will return the name of the file for now
-# Later we'll have it TODO: return a map of images names with a confidence level above of a certain threshold
+# It returns a map of the object identified in the database, the segment and the confidence level
 def compare_images(segmented_images, catalog_images, catalog_image_names, error_threshold):
     before = time.time()
 
+    # valid_objects_files, mean_err, minimum_err = task_compare_images(segmented_images, catalog_images, catalog_image_names, error_threshold)
     valid_objects_files = []
-    catalog_image_result_id = 0
-    current_catalog_image = 0
-    minimum_err = 1
     mean_err = 0
+    minimum_err = 1
+    threads = []
+    results = []
 
-    progressbar.printProgressBar(0, len(catalog_images), prefix='Progress:', suffix='Complete', length=50)
-    # Iterate through all the images available from the catalog and the segmented images we got from the original image
-    for catalog_image in catalog_images:
-        current_catalog_image += 1
-        progressbar.printProgressBar(current_catalog_image, len(catalog_images), prefix='Image Comparison Progress:', suffix='Complete',
-                                     length=50)
+    for thread in range(total_threads_number):
+        threads.append(threading.Thread(target=task_compare_images, args=(segmented_images, catalog_images, catalog_image_names,
+                                                                          error_threshold, thread, results)))
 
-        # We pre process the catalog image too here in order to align with the one we segmented
-        catalog_image = ip.apply_filters(catalog_image)
-        current_segment = 0
+        # starting threads
+        threads[thread].start()
 
-        for segmented_image in segmented_images:
-            # Resize the images from the catalog to be the same size as the segmented ones
-            # catalog_image_new = cv2.resize(catalog_image, segmented_image.shape, interpolation=cv2.INTER_AREA)
-            segmented_image_new = cv2.resize(segmented_image, catalog_image.shape, interpolation=cv2.INTER_AREA)
-
-            # For now we use mse as this is a simple enough algorithm for a first version of the application
-            err = mse(segmented_image_new, catalog_image)
-            mean_err += err
-            # If the error is lesser than the threshold we set up, save the image name
-            if err < error_threshold:
-                valid_object = {
-                    "segment": current_segment,
-                    "filename": catalog_image_names[current_catalog_image],
-                    "err": err
-                }
-                valid_objects_files.append(valid_object)
-
-            # Save the best minimum in order to better debug and understand where we are situated
-            if err < minimum_err:
-                minimum_err = err
-
-            current_segment += 1
+    for thread in range(total_threads_number):
+        # wait until all threads finish
+        threads[thread].join()
+        mean_err += results[thread][1]
+        if len(results[thread][0]) > 0:
+            valid_objects_files.append(results[thread][0])
+        if results[thread][2] < minimum_err:
+            minimum_err = results[thread][2]
 
     print(valid_objects_files)
     after = time.time()
@@ -79,6 +69,64 @@ def compare_images(segmented_images, catalog_images, catalog_image_names, error_
           ".\nThe mean value of the error along the dataset was ", mean_err)
     # valid_objects_files.append(catalog_image_names[catalog_image_result_id])
     return valid_objects_files
+
+
+def task_compare_images(segmented_images, catalog_images, catalog_image_names, error_threshold, thread_number, results):
+    valid_objects_files = []
+    minimum_err = 1
+    mean_err = 0
+    catalog_images_len = len(catalog_images)
+    chunck_size = catalog_images_len / total_threads_number
+    start = int(chunck_size * thread_number)
+    end = int(start + chunck_size)
+    current_catalog_image = start
+    current_catalog_image_counter = 0
+
+    progressbar.printProgressBar(0, chunck_size, prefix='Thread ' + str(thread_number) + ':', suffix='Complete', length=50)
+
+    for catalog_image in range(start, end):
+        current_catalog_image += 1
+        current_catalog_image_counter += 1
+        progressbar.printProgressBar(current_catalog_image_counter, chunck_size, prefix='Thread ' + str(thread_number) + ':', suffix='Complete',
+                                     length=50)
+
+        # We pre process the catalog image too here in order to align with the one we segmented
+        catalog_image_filtered = ip.apply_filters(catalog_images[catalog_image])
+        current_segment = 0
+        for segmented_image in segmented_images:
+            current_segment += 1
+            valid_objects_files, mean_err, minimum_err = compare(catalog_image_filtered, segmented_image, catalog_image_names,
+                                            current_catalog_image, mean_err, valid_objects_files, current_segment,
+                                            minimum_err, error_threshold)  # logic for comparing catalogImages[i] to segmentedImages[i]
+
+
+    mutex.acquire()
+    results.append((valid_objects_files, mean_err, minimum_err))
+    mutex.release()
+
+
+def compare(catalog_image, segmented_image, catalog_image_names, current_catalog_image, mean_err, valid_objects_files, current_segment, minimum_err, error_threshold):
+    # Resize the images from the catalog to be the same size as the segmented ones
+    # catalog_image_new = cv2.resize(catalog_image, segmented_image.shape, interpolation=cv2.INTER_AREA)
+    segmented_image_new = cv2.resize(segmented_image, catalog_image.shape, interpolation=cv2.INTER_AREA)
+
+    # For now we use mse as this is a simple enough algorithm for a first version of the application
+    err = mse(segmented_image_new, catalog_image)
+    mean_err += err
+    # If the error is lesser than the threshold we set up, save the image name
+    if err < error_threshold:
+        valid_object = {
+            "segment": current_segment,
+            "filename": catalog_image_names[current_catalog_image],
+            "err": err
+        }
+        valid_objects_files.append(valid_object)
+
+    # Save the best minimum in order to better debug and understand where we are situated
+    if err < minimum_err:
+        minimum_err = err
+
+    return valid_objects_files, mean_err, minimum_err
 
 
 def mse(segmented_image, catalog_image):

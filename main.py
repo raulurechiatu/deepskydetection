@@ -9,8 +9,9 @@ image_name = 'andromeda'
 
 galaxy_zoo_images_path = "../resources/galaxyzoo2/images_gz2/images/"
 
-images_to_load = 120000
+images_to_load = 1000
 error_threshold = 0.0013
+total_threads_number = 6
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
