@@ -9,7 +9,7 @@ image_name = 'andromeda'
 
 galaxy_zoo_images_path = "../resources/galaxyzoo2/images_gz2/images/"
 
-images_to_load = 10000
+images_to_load = 1000
 error_threshold = 0.0016
 
 # Press the green button in the gutter to run the script.

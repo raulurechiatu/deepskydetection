@@ -3,6 +3,7 @@ from service import image_processor as ip
 from service import image_loader as il
 import numpy as np
 from service import plot_builder as plot
+from utils import progressbar
 
 import cv2
 
@@ -10,7 +11,8 @@ import cv2
 # A method used to start the comparison process and everything that is required to do that
 # It will load the original image (the image we will test on), the catalog images and their names and will call the
 # comparison algorithm
-def start_comparison_process(original_image_path, catalog_images_path, images_to_load=-1, error_threshold=0.05, zoom_from_center=15):
+def start_comparison_process(original_image_path, catalog_images_path, images_to_load=-1, error_threshold=0.05,
+                             zoom_from_center=15):
     # Get the images from the catalog (locally for now)
     catalog_images, catalog_image_names = il.load_images(catalog_images_path, images_to_load, 0)
 
@@ -27,7 +29,6 @@ def start_comparison_process(original_image_path, catalog_images_path, images_to
 # It will return the name of the file for now
 # Later we'll have it TODO: return a map of images names with a confidence level above of a certain threshold
 def compare_images(segmented_images, catalog_images, catalog_image_names, error_threshold):
-
     before = time.time()
 
     valid_objects_files = []
@@ -36,9 +37,13 @@ def compare_images(segmented_images, catalog_images, catalog_image_names, error_
     minimum_err = 1
     mean_err = 0
 
+    progressbar.printProgressBar(0, len(catalog_images), prefix='Progress:', suffix='Complete', length=50)
     # Iterate through all the images available from the catalog and the segmented images we got from the original image
     for catalog_image in catalog_images:
         current_catalog_image += 1
+        progressbar.printProgressBar(current_catalog_image, len(catalog_images), prefix='Image Comparison Progress:', suffix='Complete',
+                                     length=50)
+
         # We pre process the catalog image too here in order to align with the one we segmented
         catalog_image = ip.apply_filters(catalog_image)
         current_segment = 0
@@ -69,7 +74,7 @@ def compare_images(segmented_images, catalog_images, catalog_image_names, error_
     print(valid_objects_files)
     after = time.time()
     mean_err = mean_err / len(catalog_images) * len(segmented_images)
-    print("Comparator service took", (after-before), "s and generated", len(valid_objects_files),
+    print("Comparator service took", (after - before), "s and generated", len(valid_objects_files),
           "similarities with an error less than", error_threshold, ".\nClosest error to the threshold is:", minimum_err,
           ".\nThe mean value of the error along the dataset was ", mean_err)
     # valid_objects_files.append(catalog_image_names[catalog_image_result_id])
@@ -94,7 +99,7 @@ def hcd(img):
 # Scale-invariant feature transform
 def sift(img):
     sft = cv2.SIFT_create()
-    img = np.uint8(img*255)
+    img = np.uint8(img * 255)
     kp = sft.detect(img, None)
     result = cv2.drawKeypoints(img, kp, img)
     plot.display_two_images(result, result)
