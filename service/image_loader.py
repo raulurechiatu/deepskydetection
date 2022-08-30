@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from PIL import Image
 from main import image_name
+from utils import progressbar
+
 
 import shutil
 import os
@@ -30,13 +32,17 @@ def load_images(folder_path, images_to_load=-1, offset=0):
     # The reason behind this if is to iterate more efficiently over the whole dataset without adding a check step
     # each time
     if images_to_load == -1:
+        progressbar.printProgressBar(0, len(image_names), prefix='Progress:', suffix='Complete', length=50)
         for image_name in image_names:
+            progressbar.printProgressBar(image_names.index(image_name), len(image_names), prefix='Loading images in memory:', suffix='Complete', length=50)
             # Here we can change the library used to load images in memory
             galaxyzoo_images.append(load_image_matplot(folder_path + image_name))
 
     else:
+        progressbar.printProgressBar(0, images_to_load, prefix='Progress:', suffix='Complete', length=50)
         for image_name in image_names:
             image_number = image_number + 1
+            progressbar.printProgressBar(image_number, images_to_load, prefix='Loading images in memory:', suffix='Complete', length=50)
             # Here we can change the library used to load images in memory
             galaxyzoo_images.append(load_image_matplot(folder_path + image_name))
             if images_to_load == image_number:
