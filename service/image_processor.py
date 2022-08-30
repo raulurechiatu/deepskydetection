@@ -5,7 +5,7 @@ from scipy.ndimage import gaussian_filter
 astronomical_objects = []
 objects_count = 0
 # Used to filter out the images that are too small for usage
-image_save_kernel_threshold = 7
+IMAGE_SAVE_KERNEL_THRESHOLD = 7
 
 
 def apply_filters(img, gaussian=False, grayscale=True):
@@ -46,7 +46,8 @@ def identify_and_outline_objects(img, plt=0, outline=True, save=True, zoom_from_
                 kernel_size = 3
                 # While the pixel is not out of bounds and its kernel value is in parameters we increase the kernel size
                 # Increasing this size will let us expand the search and later expand the drawn circle
-                while center[0]+kernel_size < width and center[1]+kernel_size < height and get_kernel_value(img, kernel_size, visited, center[0], center[1]) > KERNEL_THRESHOLD:
+                while center[0]+kernel_size < width and center[1]+kernel_size < height and \
+                        get_kernel_value(img, kernel_size, visited, center[0], center[1]) > KERNEL_THRESHOLD:
                     kernel_size += 2
 
                 # Create the coords object to be drawn later from the maximum center found
@@ -57,7 +58,7 @@ def identify_and_outline_objects(img, plt=0, outline=True, save=True, zoom_from_
                 # if the kernel size is big enough
                 # This is done so we won't take in consideration images that are too small
                 # Hence resulting in one pixel segmented objects that will yield no results
-                if save and kernel_size > image_save_kernel_threshold:
+                if save and kernel_size > IMAGE_SAVE_KERNEL_THRESHOLD:
                     save_object_in_memory(img, coords, kernel_size, zoom_from_center)
 
                 # Color the circle

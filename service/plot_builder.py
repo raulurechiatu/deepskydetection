@@ -13,7 +13,7 @@ def display_images(identified_objects, catalog_images_path):
 
         f, axarr = plt.subplots(1, 2)
         plt.suptitle('Segment ' + str(identified_object['segment']) + '-' + identified_object['filename'] +
-                     ' (Error value ' + str(identified_object['err']) + ')')
+                     ' (Error value ' + str(round(identified_object['err'], 5)) + ')')
         axarr[0].imshow(ip.astronomical_objects[segment], cmap='gray')
 
         catalog_image = ip.apply_filters(catalog_image)

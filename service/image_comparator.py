@@ -34,6 +34,7 @@ def compare_images(segmented_images, catalog_images, catalog_image_names, error_
     catalog_image_result_id = 0
     current_catalog_image = 0
     minimum_err = 1
+    mean_err = 0
 
     # Iterate through all the images available from the catalog and the segmented images we got from the original image
     for catalog_image in catalog_images:
@@ -49,6 +50,7 @@ def compare_images(segmented_images, catalog_images, catalog_image_names, error_
 
             # For now we use mse as this is a simple enough algorithm for a first version of the application
             err = mse(segmented_image_new, catalog_image)
+            mean_err += err
             # If the error is lesser than the threshold we set up, save the image name
             if err < error_threshold:
                 valid_object = {
@@ -66,8 +68,10 @@ def compare_images(segmented_images, catalog_images, catalog_image_names, error_
 
     print(valid_objects_files)
     after = time.time()
+    mean_err = mean_err / len(catalog_images) * len(segmented_images)
     print("Comparator service took", (after-before), "s and generated", len(valid_objects_files),
-          "similarities with an error less than", error_threshold, ". Closest error to the threshold is:", minimum_err)
+          "similarities with an error less than", error_threshold, ".\nClosest error to the threshold is:", minimum_err,
+          ".\nThe mean value of the error along the dataset was ", mean_err)
     # valid_objects_files.append(catalog_image_names[catalog_image_result_id])
     return valid_objects_files
 
@@ -79,3 +83,22 @@ def mse(segmented_image, catalog_image):
     return err
 
 
+# Next 2 algorithms are more advanced image comparison techniques as they use key point detecion
+# Harris corner detector
+def hcd(img):
+    dst = cv2.cornerHarris(np.float32(img), 2, 3, 0.04)
+    img[dst > 0.01 * dst.max()] = 1
+    plot.display_two_images(img, img)
+
+
+# Scale-invariant feature transform
+def sift(img):
+    sft = cv2.SIFT_create()
+    img = np.uint8(img*255)
+    kp = sft.detect(img, None)
+    result = cv2.drawKeypoints(img, kp, img)
+    plot.display_two_images(result, result)
+
+
+def download_segmented_objects():
+    il.download_segmented_objects()

@@ -2,6 +2,7 @@
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from PIL import Image
+from main import image_name
 
 import shutil
 import os
@@ -14,11 +15,11 @@ segmentation_path = "images/output/segmentation/"
 # galaxyzoo_images = []
 
 
-def load_images(path, images_to_load=-1, offset=0):
+def load_images(folder_path, images_to_load=-1, offset=0):
     # global galaxyzoo_images
     # galaxyzoo_images = np.ndarray(shape=(424, 424, 3))
     galaxyzoo_images = []
-    final_path = Path(__file__).parent / path
+    final_path = Path(__file__).parent / folder_path
 
     before = time.time()
     image_names = os.listdir(final_path)
@@ -31,13 +32,13 @@ def load_images(path, images_to_load=-1, offset=0):
     if images_to_load == -1:
         for image_name in image_names:
             # Here we can change the library used to load images in memory
-            galaxyzoo_images.append(load_image_matplot(path + image_name))
+            galaxyzoo_images.append(load_image_matplot(folder_path + image_name))
 
     else:
         for image_name in image_names:
             image_number = image_number + 1
             # Here we can change the library used to load images in memory
-            galaxyzoo_images.append(load_image_matplot(path + image_name))
+            galaxyzoo_images.append(load_image_matplot(folder_path + image_name))
             if images_to_load == image_number:
                 break
 
@@ -123,7 +124,8 @@ def compare_filters(path):
 def download_segmented_objects():
     if len(image_processor.astronomical_objects) > 0:
         path = Path(__file__).parent.parent / segmentation_path / image_name
-        shutil.rmtree(path)
+        if path.exists():
+            shutil.rmtree(path)
         path.mkdir(exist_ok=True)
     else:
         print("No objects identified on the image")
