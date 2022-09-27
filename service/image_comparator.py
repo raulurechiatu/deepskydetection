@@ -1,13 +1,15 @@
 import threading
 import time
 from threading import Lock
+import numba
+# from numba import vectorize, cuda
 
 from service import image_processor as ip
 from service import image_loader as il
 import numpy as np
 from service import plot_builder as plot
 from utils import progressbar
-from main import total_threads_number
+from main import total_threads_number, error_threshold
 
 import cv2
 
@@ -18,8 +20,7 @@ mutex = Lock()
 # A method used to start the comparison process and everything that is required to do that
 # It will load the original image (the image we will test on), the catalog images and their names and will call the
 # comparison algorithm
-def start_comparison_process(original_image_path, catalog_images_path, images_to_load=-1, error_threshold=0.05,
-                             zoom_from_center=15):
+def start_comparison_process(original_image_path, catalog_images_path, images_to_load=-1, zoom_from_center=15):
     # Get the images from the catalog (locally for now)
     catalog_images, catalog_image_names = il.load_images(catalog_images_path, images_to_load, 0)
 
@@ -27,15 +28,16 @@ def start_comparison_process(original_image_path, catalog_images_path, images_to
     original_image = il.load_image_matplot(original_image_path)
     original_image = ip.apply_filters(original_image, gaussian=False)
     ip.identify_and_outline_objects(original_image, outline=False, save=True, zoom_from_center=zoom_from_center)
+    print("Segmentation process found ", ip.objects_count, " images.")
 
-    return compare_images(ip.astronomical_objects, catalog_images, catalog_image_names, error_threshold)
+    return compare_images(ip.astronomical_objects, catalog_images, catalog_image_names)
 
 
 # TODO: make both lists have the same size and start the comparison process
 # This method will start the algorithm for comparison of two images
 # It will return the name of the file for now
 # It returns a map of the object identified in the database, the segment and the confidence level
-def compare_images(segmented_images, catalog_images, catalog_image_names, error_threshold):
+def compare_images(segmented_images, catalog_images, catalog_image_names):
     before = time.time()
 
     # valid_objects_files, mean_err, minimum_err = task_compare_images(segmented_images, catalog_images, catalog_image_names, error_threshold)
@@ -47,7 +49,7 @@ def compare_images(segmented_images, catalog_images, catalog_image_names, error_
 
     for thread in range(total_threads_number):
         threads.append(threading.Thread(target=task_compare_images, args=(segmented_images, catalog_images, catalog_image_names,
-                                                                          error_threshold, thread, results)))
+                                                                          thread, results)))
 
         # starting threads
         threads[thread].start()
@@ -57,13 +59,13 @@ def compare_images(segmented_images, catalog_images, catalog_image_names, error_
         threads[thread].join()
         mean_err += results[thread][1]
         if len(results[thread][0]) > 0:
-            valid_objects_files.append(results[thread][0])
+            valid_objects_files.extend(results[thread][0])
         if results[thread][2] < minimum_err:
             minimum_err = results[thread][2]
 
     print(valid_objects_files)
     after = time.time()
-    mean_err = mean_err / len(catalog_images) * len(segmented_images)
+    mean_err = mean_err / (len(catalog_images) * len(segmented_images))
     print("Comparator service took", (after - before), "s and generated", len(valid_objects_files),
           "similarities with an error less than", error_threshold, ".\nClosest error to the threshold is:", minimum_err,
           ".\nThe mean value of the error along the dataset was ", mean_err)
@@ -71,7 +73,7 @@ def compare_images(segmented_images, catalog_images, catalog_image_names, error_
     return valid_objects_files
 
 
-def task_compare_images(segmented_images, catalog_images, catalog_image_names, error_threshold, thread_number, results):
+def task_compare_images(segmented_images, catalog_images, catalog_image_names, thread_number, results):
     valid_objects_files = []
     minimum_err = 1
     mean_err = 0
@@ -97,7 +99,7 @@ def task_compare_images(segmented_images, catalog_images, catalog_image_names, e
             current_segment += 1
             valid_objects_files, mean_err, minimum_err = compare(catalog_image_filtered, segmented_image, catalog_image_names,
                                             current_catalog_image, mean_err, valid_objects_files, current_segment,
-                                            minimum_err, error_threshold)  # logic for comparing catalogImages[i] to segmentedImages[i]
+                                            minimum_err)  # logic for comparing catalogImages[i] to segmentedImages[i]
 
 
     mutex.acquire()
@@ -105,7 +107,7 @@ def task_compare_images(segmented_images, catalog_images, catalog_image_names, e
     mutex.release()
 
 
-def compare(catalog_image, segmented_image, catalog_image_names, current_catalog_image, mean_err, valid_objects_files, current_segment, minimum_err, error_threshold):
+def compare(catalog_image, segmented_image, catalog_image_names, current_catalog_image, mean_err, valid_objects_files, current_segment, minimum_err):
     # Resize the images from the catalog to be the same size as the segmented ones
     # catalog_image_new = cv2.resize(catalog_image, segmented_image.shape, interpolation=cv2.INTER_AREA)
     segmented_image_new = cv2.resize(segmented_image, catalog_image.shape, interpolation=cv2.INTER_AREA)
@@ -129,10 +131,34 @@ def compare(catalog_image, segmented_image, catalog_image_names, current_catalog
     return valid_objects_files, mean_err, minimum_err
 
 
+@numba.jit
 def mse(segmented_image, catalog_image):
-    err = np.sum((segmented_image.astype("float") - catalog_image.astype("float")) ** 2)
+    err = np.sum((segmented_image - catalog_image) ** 2)
     err /= float(segmented_image.shape[0] * catalog_image.shape[1])
     # return the MSE, the lower the error, the more "similar" the two images are
+    return err
+
+
+# @vectorize(['float32(float32, float32)',
+#             'float64(float64, float64)'],
+#            target='cuda')
+# def mse2(segmented_image: np.ndarray, catalog_image: np.ndarray) -> float:
+#     err = np.sum((segmented_image - catalog_image) ** 2)
+#     err /= float(segmented_image.shape[0] * catalog_image.shape[1])
+#     # return the MSE, the lower the error, the more "similar" the two images are
+#     return err
+
+
+# @vectorize(['float64(float64, float64)',
+#             'float64(float64, float64)'],
+#             target='cuda')
+def test(image_a: np.ndarray, image_b: np.ndarray):
+    return (image_a - image_b) ** 2
+
+
+def mse2(image_a: np.ndarray, image_b: np.ndarray) -> float:
+    err = np.sum(test(image_a, image_b))
+    err /= float(image_a.shape[0] * image_b.shape[1])
     return err
 
 

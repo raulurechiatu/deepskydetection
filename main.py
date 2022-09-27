@@ -10,14 +10,15 @@ image_name = 'andromeda'
 galaxy_zoo_images_path = "../resources/galaxyzoo2/images_gz2/images/"
 
 images_to_load = 1000
-error_threshold = 0.0013
+error_threshold = 0.0016
+# error_threshold = 0.04
 total_threads_number = 6
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     identified_objects = ic.start_comparison_process(images_parent_path + str(image_name + '.png'),
                                                      galaxy_zoo_images_path,
-                                                     images_to_load=images_to_load, error_threshold=error_threshold,
+                                                     images_to_load=images_to_load,
                                                      zoom_from_center=25)
 
     if len(identified_objects) == 0:
