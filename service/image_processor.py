@@ -3,6 +3,7 @@ from scipy.ndimage import gaussian_filter
 
 
 astronomical_objects = []
+astronomical_objects_signature = []
 objects_count = 0
 # Used to filter out the images that are too small for usage
 IMAGE_SAVE_KERNEL_THRESHOLD = 7
@@ -132,6 +133,20 @@ def get_center(img, x, y, kernel_size=5):
                     kernel_maximum = kernel[i, j]
                     x, y = x+i, y+j
     return x, y
+
+
+def get_object_signature(kernel):
+    signature_threshold = 0.5
+    width, height = kernel.shape
+    # result = [[0 for x in range(width)] for y in range(height)]
+    result = np.zeros((width, height), dtype=np.uint8)
+    for x in range(width-1):
+        for y in range(height-1):
+            if kernel[x][y] > signature_threshold:
+                result[x][y] = 1
+            else:
+                result[x][y] = 0
+    return result
 
 
 # Save the objects identified on the local memory for easy later usage

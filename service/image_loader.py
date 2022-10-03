@@ -59,7 +59,7 @@ def load_images(folder_path, images_to_load=-1, offset=0):
 # This is meant for better manipulation of the data and powerful observation tools while the other function should be
 # used for bulk loading of images
 # Deprecated DO NOT USE
-def load_image_prettified(path, download_segmented=False, display_images=False):
+def load_image_prettified(path, image_name, download_segmented=False, display_images=False):
     # Load the image
     original = load_image_matplot(path)
 
@@ -79,7 +79,7 @@ def load_image_prettified(path, download_segmented=False, display_images=False):
     # Will download the images under segmentation_path variable value if the option is selected
     # The method will generate the astronomical objects segmented out of the image
     if download_segmented:
-        download_segmented_objects()
+        download_segmented_objects(image_name)
 
     return original
 
@@ -127,7 +127,7 @@ def compare_filters(path):
 # Will download the images saved by the image_processor
 # The name will be generated based on the image name, an index and the size of the kernel
 # The size of the kernel is the diagonal of the matrix generated from the identified center of the image
-def download_segmented_objects():
+def download_segmented_objects(image_name):
     if len(image_processor.astronomical_objects) > 0:
         path = Path(__file__).parent.parent / segmentation_path / image_name
         if path.exists():
