@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt
 from pathlib import Path
 import matplotlib.image as mpimg
-from service import image_processor as ip
+from segmentation import custom_processor as cp
+from utils import image_processor as ip
 import numpy as np
 
 
@@ -14,7 +15,7 @@ def display_images(identified_objects, catalog_images_path):
         f, axarr = plt.subplots(1, 2)
         plt.suptitle('Segment ' + str(identified_object['segment']) + '-' + identified_object['filename'] +
                      ' (Error value ' + str(round(identified_object['err'], 5)) + ')')
-        axarr[0].imshow(ip.astronomical_objects[segment-1], cmap='gray')
+        axarr[0].imshow(cp.astronomical_objects[segment-1], cmap='gray')
 
         catalog_image = ip.apply_filters(catalog_image)
         axarr[1].imshow(catalog_image, cmap='gray')

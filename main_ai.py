@@ -2,6 +2,10 @@ import service.image_comparator as ic
 import service.image_loader as il
 import service.db_manager as db
 import service.plot_builder as plot
+import service.train_service as ts
+
+
+ts.configure_gpu()
 
 # Path for the initial image to start the algorithm on
 # This image is for example a picture took with a personal telescope or obtain via the internet to be analyzed
@@ -9,8 +13,11 @@ images_parent_path = "../images/deepsky/"
 image_name = 'andromeda'
 
 galaxy_zoo_images_path = "../resources/galaxyzoo2/images_gz2/images/"
+nebulae_images_path = "../resources/nebulae/images/"
+galaxies_images_path = "../resources/galaxies/"
+stars_images_path = "../resources/stars/"
 
-images_to_load = 25000
+images_to_load = 2000
 error_threshold = 0.85
 # error_threshold = 0.0016
 # error_threshold = 0.04
@@ -51,9 +58,16 @@ def compare_segmentation():
         print("For the execution time please call the method with the value of the display_images parameter set to True!")
 
 
+def train_data():
+    galaxy_images, _ = il.load_images(galaxy_zoo_images_path, images_to_load, 0)
+    nebulae_images, _ = il.load_images(nebulae_images_path, images_to_load, 0)
+    star_images, _ = il.load_images(stars_images_path, images_to_load, 0)
+    ts.train(galaxy_images, nebulae_images, star_images)
+
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-
+    train_data()
     # print(multiprocessing.cpu_count())
-    compare_data()
+    # compare_data()
     # compare_segmentation()

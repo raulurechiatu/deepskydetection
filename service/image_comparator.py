@@ -4,7 +4,8 @@ from threading import Lock
 import numba
 # from numba import vectorize, cuda
 
-from service import image_processor as ip
+from segmentation import custom_processor as cp
+from utils import image_processor as ip
 from service import image_loader as il
 import numpy as np
 from service import plot_builder as plot
@@ -26,14 +27,13 @@ def start_comparison_process(original_image_path, catalog_images_path, total_thr
     # Load the original image the user wants to run the algorithm on
     original_image = il.load_image_matplot(original_image_path)
     original_image = ip.apply_filters(original_image, gaussian=False)
-    ip.identify_and_outline_objects(original_image, outline=False, save=True, zoom_from_center=zoom_from_center)
-    print("Segmentation process found ", ip.objects_count, " images.")
+    cp.identify_and_outline_objects(original_image, outline=False, save=True, zoom_from_center=zoom_from_center)
+    print("Segmentation process found ", cp.objects_count, " images.")
 
-    return compare_images(ip.astronomical_objects, catalog_images, catalog_image_names, total_threads_number,
+    return compare_images(cp.astronomical_objects, catalog_images, catalog_image_names, total_threads_number,
                           error_threshold)
 
 
-# TODO: make both lists have the same size and start the comparison process
 # This method will start the algorithm for comparison of two images
 # It will return the name of the file for now
 # It returns a map of the object identified in the database, the segment and the confidence level
@@ -77,7 +77,7 @@ def compare_images(segmented_images, catalog_images, catalog_image_names, total_
 def task_compare_images(segmented_images, catalog_images, catalog_image_names, thread_number, results,
                         total_threads_number, error_threshold):
     valid_objects_files = []
-    minimum_err = 1
+    minimum_err = 0
     mean_err = 0
     catalog_images_len = len(catalog_images)
     chunck_size = catalog_images_len / total_threads_number
@@ -122,10 +122,12 @@ def compare(catalog_image, segmented_image, catalog_image_names, current_catalog
     segmented_image_new = cv2.resize(segmented_image, catalog_image.shape, interpolation=cv2.INTER_AREA)
 
     # For now we use mse as this is a simple enough algorithm for a first version of the application
-    err = mse(segmented_image_new, catalog_image)
+    # err = mse(segmented_image_new, catalog_image)
+    err = hist(segmented_image_new, catalog_image)
+    # err = sift(segmented_image_new, catalog_image)
     mean_err += err
     # If the error is lesser than the threshold we set up, save the image name
-    if err < error_threshold:
+    if err > error_threshold:
         valid_object = {
             "segment": current_segment,
             "filename": catalog_image_names[current_catalog_image],
@@ -134,7 +136,7 @@ def compare(catalog_image, segmented_image, catalog_image_names, current_catalog
         valid_objects_files.append(valid_object)
 
     # Save the best minimum in order to better debug and understand where we are situated
-    if err < minimum_err:
+    if err > minimum_err:
         minimum_err = err
 
     return valid_objects_files, mean_err, minimum_err
@@ -180,13 +182,50 @@ def hcd(img):
 
 
 # Scale-invariant feature transform
-def sift(img):
+def sift(img1, img2):
     sft = cv2.SIFT_create()
-    img = np.uint8(img * 255)
-    kp = sft.detect(img, None)
-    result = cv2.drawKeypoints(img, kp, img)
-    plot.display_two_images(result, result)
+    kp1, des1 = sft.detectAndCompute(np.uint8(img1*255), None)
+    kp2, des2 = sft.detectAndCompute(np.uint8(img2*255), None)
+    bf = cv2.BFMatcher()
+    try:
+        matches = bf.knnMatch(des1, des2, k=2)
+    except (cv2.error):
+        return 0
+    # # Distances between search and index features that match
+    # distances = [m.distance for m, n in matches]
+    # # Distance between search and index images
+    # distance = sum(distances) / len(distances)
+    # # If distance == 0 -> similarity = 1
+    # similarity = 1 / (1 + distance)
+    # # print(similarity)
+    # return similarity
+
+    good = []
+    percent = 0
+    try:
+        for m, n in matches:
+            if m.distance < 0.75 * n.distance:
+                good.append([m])
+                a = len(good)
+                percent = (a * 100) / len(kp2)
+    except (ValueError):
+        print("ValueError: not enough values to unpack (expected 2, got 1)")
+    # print(percent)
+    return percent
+    # plot.display_two_images(result, result)
 
 
 def download_segmented_objects(image_name):
     il.download_segmented_objects(image_name)
+
+
+def hist(img1, img2):
+    # Calculate the histograms, and normalize them
+    hist_img1 = cv2.calcHist(np.float32(img1), [0], None, [256], [0, 1])
+    cv2.normalize(hist_img1, hist_img1, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX)
+    hist_img2 = cv2.calcHist(np.float32(img2), [0], None, [256], [0, 1])
+    cv2.normalize(hist_img2, hist_img2, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX)
+    metric_val = cv2.compareHist(hist_img1, hist_img2, cv2.HISTCMP_CORREL)
+    # plot.display_two_images(hist_img1, hist_img2)
+    # print(metric_val)
+    return metric_val

@@ -1,35 +1,18 @@
-import numpy as np
-from scipy.ndimage import gaussian_filter
+import time
 
+import numpy as np
+from utils import image_processor as ip
 
 astronomical_objects = []
 astronomical_objects_signature = []
+exec_time = 0
 objects_count = 0
 # Used to filter out the images that are too small for usage
 IMAGE_SAVE_KERNEL_THRESHOLD = 7
 
 
-def apply_filters(img, gaussian=False, grayscale=True):
-    filtered_image = img
-
-    # In case the values we have from the image are [0-255] we normalize them
-    if filtered_image.max() > 1:
-        filtered_image = filtered_image/255
-
-    if grayscale:
-        filtered_image = grayscale_filter(filtered_image)
-    if gaussian:
-        filtered_image = gaussian_filter(filtered_image, sigma=.1)
-
-    return filtered_image
-
-
-def grayscale_filter(img):
-    return np.dot(img[..., :3], [0.2989, 0.5870, 0.1140])
-
-
 def identify_and_outline_objects(img, plt=0, outline=True, save=True, zoom_from_center=15):
-    global astronomical_objects, objects_count
+    global astronomical_objects, objects_count, exec_time
     astronomical_objects = []
     objects_count = 0
     width, height = img.shape
@@ -38,6 +21,7 @@ def identify_and_outline_objects(img, plt=0, outline=True, save=True, zoom_from_
     # Used to expand the kernel in search for an object boundaries
     KERNEL_THRESHOLD = 0.3
     visited = np.zeros(img.shape)
+    before = time.time()
     for x in range(width-5):
         for y in range(height-5):
             # Checks if we identified a pixel from a celestial body or if it is part of another body already visited
@@ -53,6 +37,7 @@ def identify_and_outline_objects(img, plt=0, outline=True, save=True, zoom_from_
 
                 # Create the coords object to be drawn later from the maximum center found
                 coords = [center[0], center[1]]
+                exec_time = time.time() - before
                 snake = outline_object(coords, img, outline_size=kernel_size)
 
                 # Will save the image for later use if the option is enabled or
@@ -63,8 +48,8 @@ def identify_and_outline_objects(img, plt=0, outline=True, save=True, zoom_from_
                     save_object_in_memory(img, coords, kernel_size, zoom_from_center)
 
                 # Color the circle
-                if outline and plt != 0:
-                    circle_color = get_outline_color(img[x, y])
+                if outline and plt != 0 and kernel_size > IMAGE_SAVE_KERNEL_THRESHOLD:
+                    circle_color = ip.get_outline_color(img[x, y])
                     # Plotting the object boundary marker
                     # plt.plot(contour[:, 0], contour[:, 1], '-b', lw=1)
                     # Plotting the circle around face
@@ -88,20 +73,6 @@ def outline_object(coords, img, outline_size=1):
     # Computing the Active Contour for the given image
     # active_contour(img, snake)
     return snake
-
-
-# Will return the color of the circle based on the intensity of the pixel
-def get_outline_color(pixel_value):
-    if pixel_value > .8:
-        return '#660000'
-    elif pixel_value > .7:
-        return '#ff1919'
-    elif pixel_value > .6:
-        return '#ff6666'
-    elif pixel_value > .5:
-        return '#ff8000'
-    else:
-        return '#FFFF00'
 
 
 # Gets the value of the whole kernel and sets the neighbours to visited
