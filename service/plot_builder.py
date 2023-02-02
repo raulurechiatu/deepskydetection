@@ -4,6 +4,7 @@ import matplotlib.image as mpimg
 from segmentation import custom_processor as cp
 from utils import image_processor as ip
 import numpy as np
+import cv2 as cv
 
 
 def display_images(identified_objects, catalog_images_path):
@@ -60,3 +61,27 @@ def display_two_images(imageA, imageB):
     axarr[0].imshow(imageA, cmap='gray')
     axarr[1].imshow(imageB, cmap='gray')
     plt.show()
+
+
+def display_image(image):
+    # get_circles(image)
+    f, axarr = plt.subplots(1)
+    axarr[0].imshow(image, cmap='gray')
+    plt.show()
+
+
+def get_circles(img):
+    hh, ww = img.shape[:2]
+    min_dist = int(ww/10)
+    circles = cv.HoughCircles(img, cv.HOUGH_GRADIENT, 1, minDist=min_dist, param1=50, param2=10, minRadius=0,
+                               maxRadius=0)
+    # draw circles
+    result = img.copy()
+    for circle in circles[0]:
+        # draw the circle in the output image
+        (x, y, r) = circle
+        x = int(x)
+        y = int(y)
+        r = int(r/4)
+        cv.circle(result, (x, y), r, (255, 255, 255), 1)
+    return result

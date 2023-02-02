@@ -128,7 +128,7 @@ def load_image_matplot(path):
     final_path = Path(__file__).parent / path
     original = mpimg.imread(final_path)
     # if grayscale:
-    original = ip.apply_filters(original)
+    # original = ip.apply_filters(original)
     return original
 
 
@@ -150,6 +150,10 @@ def load_image_cv(path, grayscale=0, resize=1):
     if original.shape != desired_shape:
         original = cv2.resize(original, desired_shape, interpolation=cv2.INTER_AREA)
     return original
+
+
+def resize(img):
+    return cv2.resize(img, (number_of_pixels, number_of_pixels), interpolation=cv2.INTER_AREA)
 
 
 # Deprecated DO NOT USE

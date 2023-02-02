@@ -10,33 +10,21 @@ from sklearn import metrics
 from sklearn.model_selection import train_test_split
 from tensorflow import keras
 from tensorflow.keras.optimizers import SGD
+
 from utils import NetworkArchitectures
 
 
 number_of_pixels = 64
-
+MODEL_SAVE_NAME = "RESNET_" + str(number_of_pixels) + "_"
+model = None
 
 def train_model(data_train, data_test, labels_train, labels_test, data_validate, labels_validate):
     # configuring keras backend format for channel position
     keras.backend.set_image_data_format('channels_first')
-    print(keras.backend.image_data_format())
     batch_size = 16
-
-    print(data_train.shape)
-    # print(data_train[0])
-    # print(labels_train.shape)
-    print(len(labels_train))
-    print(data_train.shape)
-
-    # model = arch.get(item[0])()  # don't forget '()' to call the function
-    # model = NetworkArchitectures.simple(number_of_pixels)
     model = NetworkArchitectures.create_ResNet50V2(number_of_pixels)
 
-    # model.summary()
-
     opt = SGD(learning_rate=0.05)
-    # if RELOAD_WEIGHTS:
-    #     model.load_weights("models/" + WEIGHTS_FILE_NAME)
 
     model.compile(
         optimizer=tf.optimizers.Adam(),
@@ -57,9 +45,6 @@ def train_model(data_train, data_test, labels_train, labels_test, data_validate,
                        # callbacks=[metrics]
                        # shuffle = True # optional parameter for composites only
                        )
-    # save model
-    # model.save('models/model_' + str(item[0]) + '_' + str(item[1]) + '_' + str(item[2]) + '_' + str(item[3]) + '.h5')
-    # model.save('models/' + WEIGHTS_FILE_NAME)
 
     # original precision eval implementation
     test_loss, test_acc = model.evaluate(data_test, labels_test, verbose=1)
@@ -68,14 +53,13 @@ def train_model(data_train, data_test, labels_train, labels_test, data_validate,
     print('\nTest accuracy:', test_acc)
     print('\nMetric names:', model.metrics_names)
 
-    # for binary classification
-    # test_prediction = (model.predict(data_test) > 0.5).astype("int32")
+    # save model
+    # model.save('models/model_' + str(item[0]) + '_' + str(item[1]) + '_' + str(item[2]) + '_' + str(item[3]) + '.h5')
+    model.save('models/' + MODEL_SAVE_NAME + ".h5")
 
-    # for multi-class classification
     test_prediction = np.argmax(model.predict(data_test), axis=-1)
 
     print("data_test.shape: ", data_test.shape)
-    print("labels_test.shape: ", labels_test.shape)
     print("test_prediction.shape: ", test_prediction.shape)
     print("test_prediction: ", test_prediction)
     actual_vals = []
@@ -86,26 +70,6 @@ def train_model(data_train, data_test, labels_train, labels_test, data_validate,
     print("test_actual: ", actual_vals)
     print("correct prediction: ", correct_predictions)
     print("computed accuracy: ", sum(bool(x) for x in correct_predictions) / len(correct_predictions))
-
-    # print("recall w param funciton micro: ",
-    #       metrics.recall_score(labels_test, test_prediction, average='micro', zero_division=1))
-    # print("recall w param funciton macro: ",
-    #       metrics.recall_score(labels_test, test_prediction, average='macro', zero_division=1))
-    # print("recall w param funciton weighted: ",
-    #       metrics.recall_score(labels_test, test_prediction, average='weighted', zero_division=1))
-    # print("recall w param funciton binary: ",
-    #       metrics.recall_score(labels_test, test_prediction, average=None, zero_division=1))
-
-    # df = pd.DataFrame(result.history)
-    # df.plot(figsize=(8, 5))
-    # plt.grid(True)
-    # plt.gca().set_ylim(0, 1)
-    # plt.show()
-
-
-    # save model
-    # model.save('models/model_' + str(item[0]) + '_' + str(item[1]) + '_' + str(item[2]) + '_' + str(item[3]) + '.h5')
-    # model.save('models/' + WEIGHTS_FILE_NAME)
 
     # reset model
     keras.backend.clear_session()
@@ -128,10 +92,46 @@ def configure_gpu():
             print("Error: ".e)
 
 
-def train(galaxy_images, nebulae_images, star_images):
-    # (60000, 28, 28)
-    # (60000,)
+def get_model():
+    global model
+    if model is None:
+        model = keras.models.load_model("models/RESNET_64_9000.h5")
+    return model
 
+
+def evaluate(images, labels):
+    model = keras.models.load_model("models/RESNET_64_9000.h5")
+
+    # for multi-class classification
+    test_prediction = np.argmax(model.predict(images), axis=-1)
+
+    print("data_test.shape: ", images.shape)
+    print("test_prediction.shape: ", test_prediction.shape)
+    print("test_prediction: ", test_prediction)
+    if labels is not None:
+        actual_vals = []
+        correct_predictions = []
+        for label_id in range(len(labels)):
+            actual_vals.append(np.where(labels[label_id] > 0.5)[0][0])
+            correct_predictions.append(actual_vals[label_id] == test_prediction[label_id])
+        print("test_actual: ", actual_vals)
+        print("correct prediction: ", correct_predictions)
+        print("computed accuracy: ", sum(bool(x) for x in correct_predictions) / len(correct_predictions))
+
+    # df = pd.DataFrame(result.history)
+    # df.plot(figsize=(8, 5))
+    # plt.grid(True)
+    # plt.gca().set_ylim(0, 1)
+    # plt.show()
+
+
+def evaluate_image(img):
+    final_images = img.reshape(-1, 1, number_of_pixels, number_of_pixels)
+    return np.argmax(get_model().predict(final_images, verbose=0), axis=-1)
+
+
+def train(galaxy_images, nebulae_images, star_images):
+    global MODEL_SAVE_NAME
     labels = [0] * len(galaxy_images) + [1] * len(nebulae_images) + [2] * len(star_images)
     # labels = np.array(labels)
     # labels = labels.reshape(-1, 1)
@@ -141,6 +141,7 @@ def train(galaxy_images, nebulae_images, star_images):
     images = np.append(images, star_images, axis=0) / 255.0
     print(labels.shape)
     print(images.shape)
+    MODEL_SAVE_NAME += str(len(images))
 
     data_train, data_test, labels_train, labels_test = train_test_split(images,
                                                                         labels,

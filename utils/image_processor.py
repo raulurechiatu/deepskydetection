@@ -41,6 +41,15 @@ def get_outline_color(pixel_value):
         return '#FFFF00'
 
 
+def get_outline_color_prediction(val):
+    if val > 0:
+        return '#660000'
+    elif val > 1:
+        return '#ff6666'
+    else:
+        return '#FFFF00'
+
+
 def sobel(img):
     # ret, binary = cv.threshold(img, 0, 255, cv.THRESH_OTSU | cv.THRESH_BINARY_INV)
 

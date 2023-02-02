@@ -2,13 +2,15 @@ import time
 
 import numpy as np
 from utils import image_processor as ip
+from service import train_service as ts
+import service.image_loader as il
 
 astronomical_objects = []
 astronomical_objects_signature = []
 exec_time = 0
 objects_count = 0
 # Used to filter out the images that are too small for usage
-IMAGE_SAVE_KERNEL_THRESHOLD = 7
+IMAGE_SAVE_KERNEL_THRESHOLD = 1
 
 
 def identify_and_outline_objects(img, plt=0, outline=True, save=True, zoom_from_center=15):
@@ -16,8 +18,8 @@ def identify_and_outline_objects(img, plt=0, outline=True, save=True, zoom_from_
     astronomical_objects = []
     objects_count = 0
     width, height = img.shape
-    # Used to trigger the beginning of an astronomical body
-    PIXEL_THRESHOLD = 0.7
+    # Used to trigger the beginning of a detection
+    PIXEL_THRESHOLD = 0.5
     # Used to expand the kernel in search for an object boundaries
     KERNEL_THRESHOLD = 0.3
     visited = np.zeros(img.shape)
@@ -39,20 +41,26 @@ def identify_and_outline_objects(img, plt=0, outline=True, save=True, zoom_from_
                 coords = [center[0], center[1]]
                 exec_time = time.time() - before
                 snake = outline_object(coords, img, outline_size=kernel_size)
-
                 # Will save the image for later use if the option is enabled or
                 # if the kernel size is big enough
                 # This is done so we won't take in consideration images that are too small
                 # Hence resulting in one pixel segmented objects that will yield no results
-                if save and kernel_size > IMAGE_SAVE_KERNEL_THRESHOLD:
+                if save and kernel_size >= IMAGE_SAVE_KERNEL_THRESHOLD:
                     save_object_in_memory(img, coords, kernel_size, zoom_from_center)
 
+
                 # Color the circle
-                if outline and plt != 0 and kernel_size > IMAGE_SAVE_KERNEL_THRESHOLD:
-                    circle_color = ip.get_outline_color(img[x, y])
+                if outline and plt != 0 and kernel_size >= IMAGE_SAVE_KERNEL_THRESHOLD:
+                    if len(astronomical_objects) == 0:
+                        break
+                    # circle_color = ip.get_outline_color(img[x, y])
                     # Plotting the object boundary marker
                     # plt.plot(contour[:, 0], contour[:, 1], '-b', lw=1)
-                    # Plotting the circle around face
+                    # Plotting the circle around detections
+                    obj_list = [il.resize(astronomical_objects[-1])]
+                    prediction = ts.evaluate_image(np.array(obj_list))
+                    plt.text(coords[1], coords[0], str(prediction), fontdict={'size': 6, 'color': 'white'})
+                    circle_color = ip.get_outline_color_prediction(prediction)
                     plt.plot(snake[:, 0], snake[:, 1], circle_color, lw=1)
 
 
