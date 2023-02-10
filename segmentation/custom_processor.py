@@ -19,7 +19,7 @@ def identify_and_outline_objects(img, plt=0, outline=True, save=True, zoom_from_
     objects_count = 0
     width, height = img.shape
     # Used to trigger the beginning of a detection
-    PIXEL_THRESHOLD = 0.5
+    PIXEL_THRESHOLD = 0.4
     # Used to expand the kernel in search for an object boundaries
     KERNEL_THRESHOLD = 0.3
     visited = np.zeros(img.shape)

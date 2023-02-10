@@ -15,7 +15,7 @@ ts.configure_gpu()
 # Path for the initial image to start the algorithm on
 # This image is for example a picture took with a personal telescope or obtain via the internet to be analyzed
 images_parent_path = "../images/deepsky/"
-image_name = 'crab'
+image_name = 'andromeda'
 
 galaxy_zoo_images_path = "../resources/galaxyzoo2/images_gz2/images/"
 nebulae_images_path = "../resources/nebulae/images/"
