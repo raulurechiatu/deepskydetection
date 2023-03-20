@@ -24,6 +24,7 @@ def load_images(folder_path, images_to_load=-1, offset=0):
 
     before = time.time()
     image_names = os.listdir(final_path)
+    loaded_image_names = []
     after = time.time()
     print("Execution time for listdir(getting the images name) is ", (after - before), "s for ", len(image_names),
           " images")
@@ -40,6 +41,7 @@ def load_images(folder_path, images_to_load=-1, offset=0):
             # galaxyzoo_images.append(load_image_cv(folder_path + image_name))
             # np.add(galaxyzoo_images, load_image_cv(folder_path + image_name))
             galaxyzoo_images[image_names.index(image_name)] = load_image_cv(folder_path + image_name)
+            loaded_image_names.append(image_name)
 
     else:
         progressbar.printProgressBar(0, images_to_load, prefix='Progress:', suffix='Complete', length=50)
@@ -51,6 +53,7 @@ def load_images(folder_path, images_to_load=-1, offset=0):
             # galaxyzoo_images.append(load_image_cv(folder_path + image_name))
             # np.add(galaxyzoo_images, load_image_cv(folder_path + image_name))
             galaxyzoo_images[image_names.index(image_name)] = load_image_cv(folder_path + image_name)
+            loaded_image_names.append(image_name)
             if images_to_load == image_number:
                 break
 
@@ -59,7 +62,7 @@ def load_images(folder_path, images_to_load=-1, offset=0):
           " images")
     # print(galaxyzoo_images)
 
-    return galaxyzoo_images, image_names
+    return galaxyzoo_images, loaded_image_names
 
 
 def compare_segmentation_algorithms(path, image_name, download_segmented=False, display_images=False,

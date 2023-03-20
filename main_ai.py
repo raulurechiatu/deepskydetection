@@ -12,6 +12,7 @@ from segmentation import custom_processor as cp
 
 ts.configure_gpu()
 
+
 # Path for the initial image to start the algorithm on
 # This image is for example a picture took with a personal telescope or obtain via the internet to be analyzed
 images_parent_path = "../images/deepsky/"
@@ -22,7 +23,8 @@ nebulae_images_path = "../resources/nebulae/images/"
 galaxies_images_path = "../resources/galaxies/"
 stars_images_path = "../resources/stars/"
 
-images_to_load = 30
+# Worked with 6k
+images_to_load = 5000
 error_threshold = 0.85
 # error_threshold = 0.0016
 # error_threshold = 0.04
@@ -64,11 +66,16 @@ def compare_segmentation():
 
 
 def train_data():
-    galaxy_images, _ = il.load_images(galaxy_zoo_images_path, images_to_load, 0)
-    nebulae_images, _ = il.load_images(nebulae_images_path, images_to_load, 0)
-    star_images, _ = il.load_images(stars_images_path, images_to_load, 0)
+    galaxy_images, galaxy_image_names = il.load_images(galaxy_zoo_images_path, images_to_load, 0)
+    # Load the db files and search for a filename
+    galaxy_data = db.get_data(galaxy_image_names)
+    # print(galaxy_data)
+    # print(galaxy_image_names)
+    galaxy_labels = db.get_galaxy_classes(galaxy_data)
+    print(galaxy_labels)
+    galaxy_images = galaxy_images / 255.0
 
-    ts.train(galaxy_images, nebulae_images, star_images)
+    ts.train(galaxy_images, galaxy_labels)
 
 
 def evaluate_data():
@@ -91,8 +98,8 @@ def evaluate_data():
 
 
 if __name__ == '__main__':
-    # train_data()
-    evaluate_data()
+    train_data()
+    # evaluate_data()
 
     # print(multiprocessing.cpu_count())
     # compare_data()

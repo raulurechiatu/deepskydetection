@@ -1,11 +1,12 @@
 import keras
 import tensorflow as tf
-from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
+from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+from keras.models import Sequential
 
-from tensorflow.keras.layers import Input
+from keras.layers import Input
 
 
-def simple(number_of_pixels):
+def simple_old(number_of_pixels):
     # model = tf.keras.Sequential([
     #     # tf.keras.layers.Rescaling(1. / 255, input_shape=(number_of_pixels, number_of_pixels)),
     #     tf.keras.layers.Flatten(input_shape=(number_of_pixels, number_of_pixels)),
@@ -27,8 +28,32 @@ def simple(number_of_pixels):
     return model
 
 
+def simple(number_of_pixels, classes):
+    model = Sequential()
+    model.add(Conv2D(number_of_pixels, (3, 3), padding='same', activation='relu', input_shape=(1, number_of_pixels, number_of_pixels)))
+    model.add(Conv2D(number_of_pixels, (3, 3), activation='relu'))
+    model.add(MaxPooling2D())
+    model.add(Dropout(0.25))
+
+    model.add(Conv2D(number_of_pixels*2, (3, 3), padding='same', activation='relu'))
+    model.add(Conv2D(number_of_pixels*2, (3, 3), activation='relu'))
+    model.add(MaxPooling2D())
+    model.add(Dropout(0.25))
+
+    # model.add(Conv2D(number_of_pixels*4, (3, 3), padding='same', activation='relu'))
+    # model.add(Conv2D(number_of_pixels*4, (3, 3), activation='relu'))
+    # model.add(MaxPooling2D())
+    # model.add(Dropout(0.25))
+
+    model.add(Flatten())
+    model.add(Dense(512, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(classes, activation='softmax'))
+    return model
+
+
 # Keras ResNet50V2 model
-def create_ResNet50V2(number_of_pixels):
+def create_ResNet50V2(number_of_pixels, classes=3):
     inputs = Input(shape=(1, number_of_pixels, number_of_pixels))
 
     return tf.keras.applications.ResNet50V2(
@@ -37,7 +62,7 @@ def create_ResNet50V2(number_of_pixels):
         input_tensor=inputs,
         input_shape=(1, number_of_pixels, number_of_pixels),
         pooling=None,
-        classes=3,
+        classes=classes,
         classifier_activation="softmax",
     )
 

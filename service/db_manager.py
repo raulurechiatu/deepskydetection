@@ -1,7 +1,12 @@
 import csv
 import time
+from pathlib import Path
 
-db_location = 'resources/galaxyzoo2/csv/'
+import main_ai
+
+# from pandas import read_csv
+
+db_location = 'resources/galaxyzoo2/images_gz2/csv/'
 csv_filename_mappings = 'gz2_filename_mapping.csv'
 csv_db = 'gz2_hart16.csv'
 filenames, filename_headers, db_data, db_data_headers = [], [], [], []
@@ -31,16 +36,62 @@ def search_file(files):
     return results
 
 
+def get_data(file_names):
+    before = time.time()
+
+    mappings_path = Path(__file__).parent.parent / db_location / csv_filename_mappings
+    file_mappings, _ = read_csv(mappings_path)
+    data_path = Path(__file__).parent.parent / db_location / csv_db
+    csv_data, csv_headers = read_csv(data_path)
+    data = []
+    skipped_files = []
+    skip_reason = ""
+    for file_name in file_names:
+        file_name = file_name[:-4]
+        # OBS. To remove a lot of the time needed for the search remove the next two lines
+        # Get the object id from the file mappings to the data object id
+        obj_id = next(file_mapping for file_mapping in file_mappings if file_name == file_mapping[2])[0]
+        # Get the list of objects with the same id
+        obj_ids = list(filter(lambda file_mapping: file_mapping[0] == obj_id, file_mappings[int(file_name)-20:int(file_name)+20]))
+        # Get the index of the current object from all the objects with the same ID
+        obj_index = obj_ids.index(next(file_mapping for file_mapping in obj_ids if file_name == file_mapping[2]))
+        try:
+            # OBS. To remove a lot of the time needed for the search uncomment the next line and remove the following
+            # data_item = next(csv_item for csv_item in csv_data if obj_id == csv_item[0])
+            # Get the same id of the object from the data list
+            data_item = list(filter(lambda csv_item: csv_item[0] == obj_id, csv_data))[obj_index]
+        except Exception as e:
+            skipped_files.append(file_name)
+            skip_reason = e
+        if data_item is not None:
+            data.append(data_item)
+        # else:
+        #     main_ai.images_to_load -= 1
+    after = time.time()
+    print("Data mapping took", (after-before), "s for ", len(data), " valid results")
+    print("Skipped ", skipped_files, " because of ", skip_reason)
+
+    return data
+
+
+def get_galaxy_classes(galaxy_data):
+    labels = []
+    for data in galaxy_data:
+        labels.append(data[6][:1])
+    return labels
+
+
 # A method used to save in memory what we have in the CSV dbs
 # Done in order to quickly search for multiple data with only 1 operation of loading and saving the rows in memory
 def load_dbs(files_to_load=-1):
     global filenames, filename_headers, db_data, db_data_headers
-    filenames, filename_headers = read_csv(db_location + csv_filename_mappings, files_to_load)
-    db_data, db_data_headers = read_csv(db_location + csv_db, files_to_load)
+    path = Path(__file__).parent.parent / db_location / csv_filename_mappings
+    filenames, filename_headers = read_csv(path, files_to_load)
+    db_data, db_data_headers = read_csv(path, files_to_load)
 
 
 # Used to open and read the csv files
-def read_csv(path, files_to_load):
+def read_csv(path, files_to_load=-1):
     before = time.time()
     data = []
     with open(path) as db:
@@ -57,12 +108,11 @@ def read_csv(path, files_to_load):
         current_file = 0
         if files_to_load == -1:
             for row in reader:
-                current_file += 1
                 data.append(row)
 
         else:
             for row in reader:
-                if current_file > files_to_load:
+                if current_file >= files_to_load:
                     break
                 current_file += 1
                 data.append(row)

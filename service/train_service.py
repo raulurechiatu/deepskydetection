@@ -9,22 +9,40 @@ from keras.utils import to_categorical
 from sklearn import metrics
 from sklearn.model_selection import train_test_split
 from tensorflow import keras
-from tensorflow.keras.optimizers import SGD
+from keras.optimizers import SGD
 
 from utils import NetworkArchitectures
 
 
-number_of_pixels = 64
-MODEL_SAVE_NAME = "RESNET_" + str(number_of_pixels) + "_"
+number_of_pixels = 106
+MODEL_SAVE_NAME = "CUSTOM_3_" + str(number_of_pixels) + "_"
 model = None
+# class_to_number_mapping = {
+#     'sc': 0,
+#     'sb': 1,
+#     'er': 2,
+#     'ei': 3,
+#     'ec': 4,
+#     'se': 5,
+#     'sa': 6,
+#     'sd': 7,
+#     'a':  8
+# }
+class_to_number_mapping = {
+    's': 0,
+    'e': 1,
+    'a':  2
+}
 
-def train_model(data_train, data_test, labels_train, labels_test, data_validate, labels_validate):
+
+def train_model(data_train, data_test, labels_train, labels_test, data_validate, labels_validate, number_of_classes):
     # configuring keras backend format for channel position
     keras.backend.set_image_data_format('channels_first')
     batch_size = 16
-    model = NetworkArchitectures.create_ResNet50V2(number_of_pixels)
+    # model = NetworkArchitectures.create_ResNet50V2(number_of_pixels, number_of_classes)
+    model = NetworkArchitectures.simple(number_of_pixels, number_of_classes)
 
-    opt = SGD(learning_rate=0.05)
+    opt = SGD(learning_rate=0.01)
 
     model.compile(
         optimizer=tf.optimizers.Adam(),
@@ -33,18 +51,23 @@ def train_model(data_train, data_test, labels_train, labels_test, data_validate,
         loss=tf.losses.CategoricalCrossentropy(),
         # loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
         # loss=tf.losses.MeanSquaredError(),
-        metrics=[keras.metrics.Accuracy()]
+        metrics=[keras.metrics.CategoricalAccuracy()]
     )
 
     result = model.fit(data_train,
                        labels_train,
-                       epochs=5,
+                       epochs=7,
                        validation_data=(data_test, labels_test),
                        batch_size=batch_size
                        # callbacks=[es]
                        # callbacks=[metrics]
                        # shuffle = True # optional parameter for composites only
                        )
+
+    # save model
+    # model.save('models/model_' + str(item[0]) + '_' + str(item[1]) + '_' + str(item[2]) + '_' + str(item[3]) + '.h5')
+
+    model.save('models/' + MODEL_SAVE_NAME + ".h5")
 
     # original precision eval implementation
     test_loss, test_acc = model.evaluate(data_test, labels_test, verbose=1)
@@ -53,11 +76,9 @@ def train_model(data_train, data_test, labels_train, labels_test, data_validate,
     print('\nTest accuracy:', test_acc)
     print('\nMetric names:', model.metrics_names)
 
-    # save model
-    # model.save('models/model_' + str(item[0]) + '_' + str(item[1]) + '_' + str(item[2]) + '_' + str(item[3]) + '.h5')
-    model.save('models/' + MODEL_SAVE_NAME + ".h5")
-
-    test_prediction = np.argmax(model.predict(data_test), axis=-1)
+    predictions = model.predict(data_test)
+    # print(predictions)
+    test_prediction = np.argmax(predictions, axis=-1)
 
     print("data_test.shape: ", data_test.shape)
     print("test_prediction.shape: ", test_prediction.shape)
@@ -77,19 +98,22 @@ def train_model(data_train, data_test, labels_train, labels_test, data_validate,
 
 def configure_gpu():
     gpus = tf.config.list_physical_devices('GPU')
-    if gpus:
-        try:
-            # tf.config.set_visible_devices(gpus[0], 'GPU')
-            # logical_gpus = tf.config.list_logical_devices('GPU')
-            # print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPU")
-            tf.config.experimental.set_memory_growth(gpus[0], True)
-            tf.config.set_logical_device_configuration(
-                gpus[0],
-                [tf.config.LogicalDeviceConfiguration(memory_limit=6000)]
-            )
-        except RuntimeError as e:
-            # Memory growth must be set before GPUs have been initialized
-            print("Error: ".e)
+    print(gpus)
+    print(len(gpus))
+
+    # if gpus:
+    #     try:
+    #         # tf.config.set_visible_devices(gpus[0], 'GPU')
+    #         # logical_gpus = tf.config.list_logical_devices('GPU')
+    #         # print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPU")
+    #         tf.config.experimental.set_memory_growth(gpus[0], True)
+    #         tf.config.set_logical_device_configuration(
+    #             gpus[0],
+    #             [tf.config.LogicalDeviceConfiguration(memory_limit=6000)]
+    #         )
+    #     except RuntimeError as e:
+    #         # Memory growth must be set before GPUs have been initialized
+    #         print("Error: ".e)
 
 
 def get_model():
@@ -130,15 +154,21 @@ def evaluate_image(img):
     return np.argmax(get_model().predict(final_images, verbose=0), axis=-1)
 
 
-def train(galaxy_images, nebulae_images, star_images):
+def train(images, galaxy_labels):
     global MODEL_SAVE_NAME
-    labels = [0] * len(galaxy_images) + [1] * len(nebulae_images) + [2] * len(star_images)
+    # labels = [0] * len(galaxy_images) + [1] * len(nebulae_images) + [2] * len(star_images)
     # labels = np.array(labels)
     # labels = labels.reshape(-1, 1)
-    labels = to_categorical(labels, 3)
 
-    images = np.append(galaxy_images, nebulae_images, axis=0)
-    images = np.append(images, star_images, axis=0) / 255.0
+    number_of_classes = len(set(galaxy_labels))
+    labels = class_to_number(galaxy_labels)
+    print(number_of_classes)
+    print(galaxy_labels)
+    print(labels)
+
+    labels = to_categorical(labels, number_of_classes)
+
+    # images = images / 255.0
     print(labels.shape)
     print(images.shape)
     MODEL_SAVE_NAME += str(len(images))
@@ -147,7 +177,10 @@ def train(galaxy_images, nebulae_images, star_images):
                                                                         labels,
                                                                         test_size=0.1,
                                                                         shuffle=True,
-                                                                        random_state=1)
+                                                                        random_state=1
+                                                                        # shuffle=False,
+                                                                        # random_state=None
+                                                                        )
     del images, labels
     validation_set_size = 50
     data_validate = data_train[-validation_set_size:]
@@ -164,6 +197,11 @@ def train(galaxy_images, nebulae_images, star_images):
     # data_test = tf.expand_dims(data_test, axis=-1)
     # data_validate = tf.expand_dims(data_validate, axis=-1)
 
-    train_model(data_train, data_test, labels_train, labels_test, data_validate, labels_validate)
+    train_model(data_train, data_test, labels_train, labels_test, data_validate, labels_validate, number_of_classes)
 
 
+def class_to_number(labels):
+    class_numbers = []
+    for label in labels:
+        class_numbers.append(class_to_number_mapping[label.lower()])
+    return class_numbers
