@@ -10,43 +10,26 @@ from sklearn import metrics
 from sklearn.model_selection import train_test_split
 from tensorflow import keras
 from keras.optimizers import SGD
+from collections import Counter
 
 from utils import NetworkArchitectures
 
 
-number_of_pixels = 106
-MODEL_SAVE_NAME = "CUSTOM_3_" + str(number_of_pixels) + "_"
+# Original size 414
+number_of_pixels = 69
+MODEL_SAVE_NAME = "RESNET_2_" + str(number_of_pixels) + "_"
 model = None
-# class_to_number_mapping = {
-#     'sc': 0,
-#     'sb': 1,
-#     'er': 2,
-#     'ei': 3,
-#     'ec': 4,
-#     'se': 5,
-#     'sa': 6,
-#     'sd': 7,
-#     'a':  8
-# }
-class_to_number_mapping = {
-    's': 0,
-    'e': 1,
-    'a':  2
-}
 
 
 def train_model(data_train, data_test, labels_train, labels_test, data_validate, labels_validate, number_of_classes):
     # configuring keras backend format for channel position
     keras.backend.set_image_data_format('channels_first')
-    batch_size = 16
-    # model = NetworkArchitectures.create_ResNet50V2(number_of_pixels, number_of_classes)
-    model = NetworkArchitectures.simple(number_of_pixels, number_of_classes)
-
-    opt = SGD(learning_rate=0.01)
+    model = NetworkArchitectures.create_ResNet50V2(number_of_pixels, number_of_classes)
+    # model = NetworkArchitectures.simple(number_of_pixels, number_of_classes)
 
     model.compile(
         optimizer=tf.optimizers.Adam(),
-        # optimizer=opt,
+        # optimizer=SGD(learning_rate=0.001),
         # loss=tf.losses.BinaryCrossentropy(),
         loss=tf.losses.CategoricalCrossentropy(),
         # loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
@@ -56,9 +39,9 @@ def train_model(data_train, data_test, labels_train, labels_test, data_validate,
 
     result = model.fit(data_train,
                        labels_train,
-                       epochs=7,
+                       epochs=10,
                        validation_data=(data_test, labels_test),
-                       batch_size=batch_size
+                       batch_size=16
                        # callbacks=[es]
                        # callbacks=[metrics]
                        # shuffle = True # optional parameter for composites only
@@ -81,13 +64,14 @@ def train_model(data_train, data_test, labels_train, labels_test, data_validate,
     test_prediction = np.argmax(predictions, axis=-1)
 
     print("data_test.shape: ", data_test.shape)
-    print("test_prediction.shape: ", test_prediction.shape)
-    print("test_prediction: ", test_prediction)
+    # print("test_prediction.shape: ", test_prediction.shape)
+    # print("test_prediction: ", test_prediction)
     actual_vals = []
     correct_predictions = []
     for label_id in range(len(labels_test)):
-        actual_vals.append(np.where(labels_test[label_id] > 0.5)[0][0])
-        correct_predictions.append(actual_vals[label_id] == test_prediction[label_id])
+        actual_val = np.where(labels_test[label_id] > 0.5)[0][0]
+        actual_vals.append({test_prediction[label_id], actual_val})
+        correct_predictions.append(actual_val == test_prediction[label_id])
     print("test_actual: ", actual_vals)
     print("correct prediction: ", correct_predictions)
     print("computed accuracy: ", sum(bool(x) for x in correct_predictions) / len(correct_predictions))
@@ -154,17 +138,17 @@ def evaluate_image(img):
     return np.argmax(get_model().predict(final_images, verbose=0), axis=-1)
 
 
-def train(images, galaxy_labels):
+def train(images, labels):
     global MODEL_SAVE_NAME
     # labels = [0] * len(galaxy_images) + [1] * len(nebulae_images) + [2] * len(star_images)
     # labels = np.array(labels)
     # labels = labels.reshape(-1, 1)
 
-    number_of_classes = len(set(galaxy_labels))
-    labels = class_to_number(galaxy_labels)
+    number_of_classes = len(set(labels))
     print(number_of_classes)
-    print(galaxy_labels)
     print(labels)
+    print(labels)
+    print(Counter(labels))
 
     labels = to_categorical(labels, number_of_classes)
 
@@ -199,9 +183,3 @@ def train(images, galaxy_labels):
 
     train_model(data_train, data_test, labels_train, labels_test, data_validate, labels_validate, number_of_classes)
 
-
-def class_to_number(labels):
-    class_numbers = []
-    for label in labels:
-        class_numbers.append(class_to_number_mapping[label.lower()])
-    return class_numbers

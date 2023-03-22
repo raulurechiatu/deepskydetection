@@ -23,8 +23,8 @@ nebulae_images_path = "../resources/nebulae/images/"
 galaxies_images_path = "../resources/galaxies/"
 stars_images_path = "../resources/stars/"
 
-# Worked with 6k
-images_to_load = 5000
+# Worked with 10k
+images_to_load = 20000
 error_threshold = 0.85
 # error_threshold = 0.0016
 # error_threshold = 0.04
@@ -71,11 +71,11 @@ def train_data():
     galaxy_data = db.get_data(galaxy_image_names)
     # print(galaxy_data)
     # print(galaxy_image_names)
-    galaxy_labels = db.get_galaxy_classes(galaxy_data)
-    print(galaxy_labels)
+    labels, indexed_labels = db.get_galaxy_classes(galaxy_data)
+    print(labels)
     galaxy_images = galaxy_images / 255.0
 
-    ts.train(galaxy_images, galaxy_labels)
+    ts.train(galaxy_images, indexed_labels)
 
 
 def evaluate_data():

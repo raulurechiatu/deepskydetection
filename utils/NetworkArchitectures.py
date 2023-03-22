@@ -30,13 +30,13 @@ def simple_old(number_of_pixels):
 
 def simple(number_of_pixels, classes):
     model = Sequential()
-    model.add(Conv2D(number_of_pixels, (3, 3), padding='same', activation='relu', input_shape=(1, number_of_pixels, number_of_pixels)))
-    model.add(Conv2D(number_of_pixels, (3, 3), activation='relu'))
+    model.add(Conv2D(32, (3, 3), padding='same', activation='relu', input_shape=(1, number_of_pixels, number_of_pixels)))
+    model.add(Conv2D(32, (3, 3), activation='relu'))
     model.add(MaxPooling2D())
     model.add(Dropout(0.25))
 
-    model.add(Conv2D(number_of_pixels*2, (3, 3), padding='same', activation='relu'))
-    model.add(Conv2D(number_of_pixels*2, (3, 3), activation='relu'))
+    model.add(Conv2D(64, (3, 3), padding='same', activation='relu'))
+    model.add(Conv2D(64, (3, 3), activation='relu'))
     model.add(MaxPooling2D())
     model.add(Dropout(0.25))
 

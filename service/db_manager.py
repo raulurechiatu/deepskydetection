@@ -6,10 +6,27 @@ import main_ai
 
 # from pandas import read_csv
 
-db_location = 'resources/galaxyzoo2/images_gz2/csv/'
+db_location = 'resources/galaxyzoo2/data/'
 csv_filename_mappings = 'gz2_filename_mapping.csv'
 csv_db = 'gz2_hart16.csv'
 filenames, filename_headers, db_data, db_data_headers = [], [], [], []
+
+class_to_number_mapping = {
+    'sc': 0,
+    'sb': 1,
+    'er': 2,
+    'ei': 3,
+    'ec': 4,
+    'se': 5,
+    'sd': 6,
+    'a':  7,
+    'sa': 8
+}
+# class_to_number_mapping = {
+#     's': 0,
+#     'e': 1,
+#     'a':  2
+# }
 
 
 # A method used to search db for a filename
@@ -39,10 +56,7 @@ def search_file(files):
 def get_data(file_names):
     before = time.time()
 
-    mappings_path = Path(__file__).parent.parent / db_location / csv_filename_mappings
-    file_mappings, _ = read_csv(mappings_path)
-    data_path = Path(__file__).parent.parent / db_location / csv_db
-    csv_data, csv_headers = read_csv(data_path)
+    file_mappings, csv_data = get_csv_raw()
     data = []
     skipped_files = []
     skip_reason = ""
@@ -52,14 +66,17 @@ def get_data(file_names):
         # Get the object id from the file mappings to the data object id
         obj_id = next(file_mapping for file_mapping in file_mappings if file_name == file_mapping[2])[0]
         # Get the list of objects with the same id
-        obj_ids = list(filter(lambda file_mapping: file_mapping[0] == obj_id, file_mappings[int(file_name)-20:int(file_name)+20]))
+        # obj_ids = list(filter(lambda file_mapping: file_mapping[0] == obj_id, file_mappings[int(file_name)-20:int(file_name)+20]))
+        # If an object appears multiple times with the same id skip it
+        # if len(obj_ids) > 1:
+        #     continue
         # Get the index of the current object from all the objects with the same ID
-        obj_index = obj_ids.index(next(file_mapping for file_mapping in obj_ids if file_name == file_mapping[2]))
+        # obj_index = obj_ids.index(next(file_mapping for file_mapping in obj_ids if file_name == file_mapping[2]))
         try:
             # OBS. To remove a lot of the time needed for the search uncomment the next line and remove the following
-            # data_item = next(csv_item for csv_item in csv_data if obj_id == csv_item[0])
+            data_item = next(csv_item for csv_item in csv_data if obj_id == csv_item[0])
             # Get the same id of the object from the data list
-            data_item = list(filter(lambda csv_item: csv_item[0] == obj_id, csv_data))[obj_index]
+            # data_item = list(filter(lambda csv_item: csv_item[0] == obj_id, csv_data))[obj_index]
         except Exception as e:
             skipped_files.append(file_name)
             skip_reason = e
@@ -70,15 +87,59 @@ def get_data(file_names):
     after = time.time()
     print("Data mapping took", (after-before), "s for ", len(data), " valid results")
     print("Skipped ", skipped_files, " because of ", skip_reason)
+    main_ai.images_to_load = len(data)
 
     return data
 
 
+def is_data_valid(file_name, file_mappings, csv_data):
+    file_name = file_name[:-4]
+    # OBS. To remove a lot of the time needed for the search remove the next two lines
+    # Get the object id from the file mappings to the data object id
+    obj_id = next(file_mapping for file_mapping in file_mappings if file_name == file_mapping[2])[0]
+    # Get the list of objects with the same id
+    obj_ids = list(filter(lambda file_mapping: file_mapping[0] == obj_id, file_mappings[int(file_name) - 20:int(file_name) + 20]))
+    # If an object appears multiple times with the same id skip it
+    if len(obj_ids) > 1:
+        return False
+    # This part checks if the db with all the data has multiple entries with the same id (computational intense)
+    # try:
+    #     # Get the same id of the object from the data list
+    #     data_items = list(filter(lambda csv_item: csv_item[0] == obj_id, csv_data))
+    #     if len(data_items) > 1:
+    #         return False
+    # except Exception as e:
+    #     print(e)
+    return True
+
+
+def get_csv_raw():
+    mappings_path = Path(__file__).parent.parent / db_location / csv_filename_mappings
+    file_mappings, _ = read_csv(mappings_path)
+    data_path = Path(__file__).parent.parent / db_location / csv_db
+    csv_data, csv_headers = read_csv(data_path)
+    return file_mappings, csv_data
+
+
 def get_galaxy_classes(galaxy_data):
     labels = []
+    indexed_labels = []
     for data in galaxy_data:
-        labels.append(data[6][:1])
-    return labels
+        labels.append(data[6][:2])
+        indexed_labels.append(class_to_number_mapping[data[6][:2].lower()])
+    #     labels.append(data[6])
+    # list_set = set(labels)
+    # uniques = (list(list_set))
+    # for label in labels:
+    #     indexed_labels.append(uniques.index(label))
+    return labels, indexed_labels
+
+
+def class_to_number(labels):
+    class_numbers = []
+    for label in labels:
+        class_numbers.append(class_to_number_mapping[label.lower()])
+    return class_numbers
 
 
 # A method used to save in memory what we have in the CSV dbs

@@ -3,6 +3,7 @@ import matplotlib.image as mpimg
 from PIL import Image
 from utils import progressbar, image_processor as ip
 from segmentation import custom_processor as cp
+from service import db_manager
 import cv2
 import numpy as np
 
@@ -18,7 +19,11 @@ segmentation_path = "images/output/segmentation/"
 
 
 def load_images(folder_path, images_to_load=-1, offset=0):
+    # Used only to check for unique items
+    file_mappings, csv_data = db_manager.get_csv_raw()
+
     # global galaxyzoo_images
+    # galaxyzoo_images = np.empty(shape=(images_to_load, number_of_pixels, number_of_pixels), dtype=np.int8)
     galaxyzoo_images = np.empty(shape=(images_to_load, number_of_pixels, number_of_pixels), dtype=np.int8)
     final_path = Path(__file__).parent / folder_path
 
@@ -29,6 +34,7 @@ def load_images(folder_path, images_to_load=-1, offset=0):
     print("Execution time for listdir(getting the images name) is ", (after - before), "s for ", len(image_names),
           " images")
     image_number = offset
+    loaded_images = 0
 
     # The reason behind this if is to iterate more efficiently over the whole dataset without adding a check step
     # each time
@@ -40,8 +46,11 @@ def load_images(folder_path, images_to_load=-1, offset=0):
             # Here we can change the library used to load images in memory
             # galaxyzoo_images.append(load_image_cv(folder_path + image_name))
             # np.add(galaxyzoo_images, load_image_cv(folder_path + image_name))
+            # Used to check the uniqueness in the db
+            # if db_manager.is_data_valid(image_name, file_mappings, csv_data):
             galaxyzoo_images[image_names.index(image_name)] = load_image_cv(folder_path + image_name)
             loaded_image_names.append(image_name)
+            loaded_images += 1
 
     else:
         progressbar.printProgressBar(0, images_to_load, prefix='Progress:', suffix='Complete', length=50)
@@ -52,8 +61,11 @@ def load_images(folder_path, images_to_load=-1, offset=0):
             # Here we can change the library used to load images in memory
             # galaxyzoo_images.append(load_image_cv(folder_path + image_name))
             # np.add(galaxyzoo_images, load_image_cv(folder_path + image_name))
+            # Used to check the uniqueness in the db
+            # if db_manager.is_data_valid(image_name, file_mappings, csv_data):
             galaxyzoo_images[image_names.index(image_name)] = load_image_cv(folder_path + image_name)
             loaded_image_names.append(image_name)
+            loaded_images += 1
             if images_to_load == image_number:
                 break
 
@@ -61,6 +73,7 @@ def load_images(folder_path, images_to_load=-1, offset=0):
     print("Execution time for loading images in memory is ", (after_image_load - after), "seconds for ", images_to_load,
           " images")
     # print(galaxyzoo_images)
+    galaxyzoo_images = np.resize(galaxyzoo_images, (loaded_images, number_of_pixels, number_of_pixels))
 
     return galaxyzoo_images, loaded_image_names
 
