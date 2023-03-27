@@ -16,20 +16,20 @@ from utils import NetworkArchitectures
 
 
 # Original size 414
-number_of_pixels = 69
-MODEL_SAVE_NAME = "RESNET_2_" + str(number_of_pixels) + "_"
+number_of_pixels = 207
+MODEL_SAVE_NAME = "CUSTOM_1_3_" + str(number_of_pixels) + "_"
 model = None
 
 
 def train_model(data_train, data_test, labels_train, labels_test, data_validate, labels_validate, number_of_classes):
     # configuring keras backend format for channel position
     keras.backend.set_image_data_format('channels_first')
-    model = NetworkArchitectures.create_ResNet50V2(number_of_pixels, number_of_classes)
-    # model = NetworkArchitectures.simple(number_of_pixels, number_of_classes)
+    # model = NetworkArchitectures.create_ResNet50V2(number_of_pixels, number_of_classes)
+    model = NetworkArchitectures.simple(number_of_pixels, number_of_classes)
 
     model.compile(
         optimizer=tf.optimizers.Adam(),
-        # optimizer=SGD(learning_rate=0.001),
+        # optimizer=SGD(learning_rate=0.00001),
         # loss=tf.losses.BinaryCrossentropy(),
         loss=tf.losses.CategoricalCrossentropy(),
         # loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
@@ -65,7 +65,7 @@ def train_model(data_train, data_test, labels_train, labels_test, data_validate,
 
     print("data_test.shape: ", data_test.shape)
     # print("test_prediction.shape: ", test_prediction.shape)
-    # print("test_prediction: ", test_prediction)
+    print("test_prediction: ", test_prediction)
     actual_vals = []
     correct_predictions = []
     for label_id in range(len(labels_test)):

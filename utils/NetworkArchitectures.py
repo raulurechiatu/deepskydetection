@@ -40,11 +40,6 @@ def simple(number_of_pixels, classes):
     model.add(MaxPooling2D())
     model.add(Dropout(0.25))
 
-    # model.add(Conv2D(number_of_pixels*4, (3, 3), padding='same', activation='relu'))
-    # model.add(Conv2D(number_of_pixels*4, (3, 3), activation='relu'))
-    # model.add(MaxPooling2D())
-    # model.add(Dropout(0.25))
-
     model.add(Flatten())
     model.add(Dense(512, activation='relu'))
     model.add(Dropout(0.5))

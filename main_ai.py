@@ -24,7 +24,7 @@ galaxies_images_path = "../resources/galaxies/"
 stars_images_path = "../resources/stars/"
 
 # Worked with 10k
-images_to_load = 20000
+images_to_load = 10000
 error_threshold = 0.85
 # error_threshold = 0.0016
 # error_threshold = 0.04
