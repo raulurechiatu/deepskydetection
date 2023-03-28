@@ -3,7 +3,7 @@ import matplotlib.image as mpimg
 from PIL import Image
 from utils import progressbar, image_processor as ip
 from segmentation import custom_processor as cp
-from service import db_manager
+from service import db_manager, plot_builder
 import cv2
 import numpy as np
 
@@ -11,7 +11,7 @@ import shutil
 import os
 import time
 from pathlib import Path
-from service.train_service import number_of_pixels
+from service.train_service import number_of_pixels, crop_size
 
 segmentation_path = "images/output/segmentation/"
 
@@ -24,7 +24,7 @@ def load_images(folder_path, images_to_load=-1, offset=0):
 
     # global galaxyzoo_images
     # galaxyzoo_images = np.empty(shape=(images_to_load, number_of_pixels, number_of_pixels), dtype=np.int8)
-    galaxyzoo_images = np.empty(shape=(images_to_load, number_of_pixels, number_of_pixels), dtype=np.int8)
+    galaxyzoo_images = np.empty(shape=(images_to_load, number_of_pixels, number_of_pixels), dtype=np.ubyte)
     final_path = Path(__file__).parent / folder_path
 
     before = time.time()
@@ -73,9 +73,27 @@ def load_images(folder_path, images_to_load=-1, offset=0):
     print("Execution time for loading images in memory is ", (after_image_load - after), "seconds for ", images_to_load,
           " images")
     # print(galaxyzoo_images)
+    # for i in range(10):
+    #     plot_builder.display_image(galaxyzoo_images[i])
     galaxyzoo_images = np.resize(galaxyzoo_images, (loaded_images, number_of_pixels, number_of_pixels))
 
     return galaxyzoo_images, loaded_image_names
+
+
+def get_rotations(images, rotations=4):
+    # angle = int(360 / rotations)
+    rotated_images = np.empty(shape=(len(images) * rotations, number_of_pixels, number_of_pixels), dtype=np.ubyte)
+    index = 0
+    for image in images:
+        # Set the first image as the original one
+        rotated_images[index] = image
+        rotated_image = image
+        index += 1
+        for i in range(1, rotations):
+            rotated_image = cv2.rotate(rotated_image, cv2.ROTATE_90_CLOCKWISE)
+            rotated_images[index] = rotated_image
+            index += 1
+    return rotated_images
 
 
 def compare_segmentation_algorithms(path, image_name, download_segmented=False, display_images=False,
@@ -160,12 +178,22 @@ def load_image_pil(path):
 def load_image_cv(path, grayscale=0, resize=1):
     final_path = Path(__file__).parent / path
     original = cv2.imread(str(final_path), grayscale)
+
     desired_shape = (number_of_pixels, number_of_pixels)
+    original = crop(original, crop_size, crop_size)
     if original is None:
         return np.zeros(desired_shape)
     if original.shape != desired_shape:
+        # plot_builder.display_two_images(original, cropped)
         original = cv2.resize(original, desired_shape, interpolation=cv2.INTER_AREA)
     return original
+
+
+def crop(img, w, h):
+    center = img.shape
+    x = center[1] / 2 - w / 2
+    y = center[0] / 2 - h / 2
+    return img[int(y):int(y+h), int(x):int(x+w)]
 
 
 def resize(img):

@@ -25,6 +25,8 @@ stars_images_path = "../resources/stars/"
 
 # Worked with 10k
 images_to_load = 10000
+rotations = 4
+
 error_threshold = 0.85
 # error_threshold = 0.0016
 # error_threshold = 0.04
@@ -69,13 +71,15 @@ def train_data():
     galaxy_images, galaxy_image_names = il.load_images(galaxy_zoo_images_path, images_to_load, 0)
     # Load the db files and search for a filename
     galaxy_data = db.get_data(galaxy_image_names)
+
+    # Get images rotated by the parameter number of times
+    galaxy_images = il.get_rotations(galaxy_images, rotations)
     # print(galaxy_data)
     # print(galaxy_image_names)
-    labels, indexed_labels = db.get_galaxy_classes(galaxy_data)
-    print(labels)
+    labels, indexed_labels = db.get_galaxy_classes(galaxy_data, rotations)
     galaxy_images = galaxy_images / 255.0
 
-    ts.train(galaxy_images, indexed_labels)
+    ts.train(galaxy_images, indexed_labels, galaxy_image_names)
 
 
 def evaluate_data():

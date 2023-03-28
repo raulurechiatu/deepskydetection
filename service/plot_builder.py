@@ -56,17 +56,19 @@ def display_images_one_window(identified_objects, catalog_images_path):
     plt.show()
 
 
-def display_two_images(imageA, imageB):
+def display_two_images(imageA, imageB, title=''):
     f, axarr = plt.subplots(1, 2)
+    plt.suptitle(title)
     axarr[0].imshow(imageA, cmap='gray')
     axarr[1].imshow(imageB, cmap='gray')
     plt.show()
 
 
-def display_image(image):
+def display_image(image, title=''):
     # get_circles(image)
     f, axarr = plt.subplots(1)
-    axarr[0].imshow(image, cmap='gray')
+    plt.suptitle(title)
+    axarr.imshow(image, cmap='gray')
     plt.show()
 
 

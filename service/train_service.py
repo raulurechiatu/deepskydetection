@@ -3,7 +3,6 @@ import os
 
 import numpy as np
 import tensorflow as tf
-import matplotlib.pyplot as plt
 import pandas as pd
 from keras.utils import to_categorical
 from sklearn import metrics
@@ -11,25 +10,29 @@ from sklearn.model_selection import train_test_split
 from tensorflow import keras
 from keras.optimizers import SGD
 from collections import Counter
+from service import plot_builder
 
 from utils import NetworkArchitectures
 
 
+# The image is firstly cropped to this size and after this is resized to the next value
+crop_size = 180
 # Original size 414
-number_of_pixels = 207
-MODEL_SAVE_NAME = "CUSTOM_1_3_" + str(number_of_pixels) + "_"
+number_of_pixels = 180
+
+MODEL_SAVE_NAME = "RESNET_2_1_" + str(number_of_pixels) + "_"
 model = None
 
 
 def train_model(data_train, data_test, labels_train, labels_test, data_validate, labels_validate, number_of_classes):
     # configuring keras backend format for channel position
     keras.backend.set_image_data_format('channels_first')
-    # model = NetworkArchitectures.create_ResNet50V2(number_of_pixels, number_of_classes)
-    model = NetworkArchitectures.simple(number_of_pixels, number_of_classes)
+    model = NetworkArchitectures.create_ResNet50V2(number_of_pixels, number_of_classes)
+    # model = NetworkArchitectures.simple(number_of_pixels, number_of_classes)
 
     model.compile(
         optimizer=tf.optimizers.Adam(),
-        # optimizer=SGD(learning_rate=0.00001),
+        # optimizer=SGD(learning_rate=0.0001),
         # loss=tf.losses.BinaryCrossentropy(),
         loss=tf.losses.CategoricalCrossentropy(),
         # loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
@@ -138,11 +141,13 @@ def evaluate_image(img):
     return np.argmax(get_model().predict(final_images, verbose=0), axis=-1)
 
 
-def train(images, labels):
+def train(images, labels, image_names):
     global MODEL_SAVE_NAME
     # labels = [0] * len(galaxy_images) + [1] * len(nebulae_images) + [2] * len(star_images)
     # labels = np.array(labels)
     # labels = labels.reshape(-1, 1)
+    for i in range(10):
+        plot_builder.display_image(images[i], str(labels[i]) + " - " + image_names[i])
 
     number_of_classes = len(set(labels))
     print(number_of_classes)
@@ -160,12 +165,14 @@ def train(images, labels):
     data_train, data_test, labels_train, labels_test = train_test_split(images,
                                                                         labels,
                                                                         test_size=0.1,
-                                                                        shuffle=True,
-                                                                        random_state=1
-                                                                        # shuffle=False,
-                                                                        # random_state=None
+                                                                        # shuffle=True,
+                                                                        # random_state=1
+                                                                        shuffle=False,
+                                                                        random_state=None
                                                                         )
     del images, labels
+    # for i in range(10):
+    #     plot_builder.display_image(data_train[i], str(labels_train[i]) + " - " + image_names[i])
     validation_set_size = 50
     data_validate = data_train[-validation_set_size:]
     labels_validate = labels_train[-validation_set_size:]

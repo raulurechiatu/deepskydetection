@@ -121,12 +121,17 @@ def get_csv_raw():
     return file_mappings, csv_data
 
 
-def get_galaxy_classes(galaxy_data):
+def get_galaxy_classes(galaxy_data, rotations=4):
     labels = []
     indexed_labels = []
     for data in galaxy_data:
-        labels.append(data[6][:2])
-        indexed_labels.append(class_to_number_mapping[data[6][:2].lower()])
+        for i in range(rotations):
+            labels.append(data[6][:2])
+        index = class_to_number_mapping[data[6][:2].lower()]
+        # if index > 4:
+        #     index = 4
+        for i in range(rotations):
+            indexed_labels.append(index)
     #     labels.append(data[6])
     # list_set = set(labels)
     # uniques = (list(list_set))
