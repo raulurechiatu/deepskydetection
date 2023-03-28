@@ -146,8 +146,8 @@ def train(images, labels, image_names):
     # labels = [0] * len(galaxy_images) + [1] * len(nebulae_images) + [2] * len(star_images)
     # labels = np.array(labels)
     # labels = labels.reshape(-1, 1)
-    for i in range(10):
-        plot_builder.display_image(images[i], str(labels[i]) + " - " + image_names[i])
+    # for i in range(10):
+    #     plot_builder.display_image(images[i], str(labels[i]) + " - " + image_names[i])
 
     number_of_classes = len(set(labels))
     print(number_of_classes)
