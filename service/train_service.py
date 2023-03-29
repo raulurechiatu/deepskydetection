@@ -18,17 +18,18 @@ from utils import NetworkArchitectures
 # The image is firstly cropped to this size and after this is resized to the next value
 crop_size = 180
 # Original size 414
-number_of_pixels = 180
+number_of_pixels = 64
 
-MODEL_SAVE_NAME = "RESNET_2_1_" + str(number_of_pixels) + "_"
+MODEL_SAVE_NAME = "CUSTOM_2_2_" + str(number_of_pixels) + "_"
 model = None
 
 
 def train_model(data_train, data_test, labels_train, labels_test, data_validate, labels_validate, number_of_classes):
     # configuring keras backend format for channel position
+    global MODEL_SAVE_NAME
     keras.backend.set_image_data_format('channels_first')
-    model = NetworkArchitectures.create_ResNet50V2(number_of_pixels, number_of_classes)
-    # model = NetworkArchitectures.simple(number_of_pixels, number_of_classes)
+    # model = NetworkArchitectures.create_ResNet50V2(number_of_pixels, number_of_classes)
+    model = NetworkArchitectures.simple(number_of_pixels, number_of_classes)
 
     model.compile(
         optimizer=tf.optimizers.Adam(),
@@ -40,9 +41,10 @@ def train_model(data_train, data_test, labels_train, labels_test, data_validate,
         metrics=[keras.metrics.CategoricalAccuracy()]
     )
 
+    epochs = 15
     result = model.fit(data_train,
                        labels_train,
-                       epochs=10,
+                       epochs=epochs,
                        validation_data=(data_test, labels_test),
                        batch_size=16
                        # callbacks=[es]
@@ -51,8 +53,7 @@ def train_model(data_train, data_test, labels_train, labels_test, data_validate,
                        )
 
     # save model
-    # model.save('models/model_' + str(item[0]) + '_' + str(item[1]) + '_' + str(item[2]) + '_' + str(item[3]) + '.h5')
-
+    MODEL_SAVE_NAME += "_" + str(epochs) + "ep"
     model.save('models/' + MODEL_SAVE_NAME + ".h5")
 
     # original precision eval implementation
@@ -151,8 +152,6 @@ def train(images, labels, image_names):
 
     number_of_classes = len(set(labels))
     print(number_of_classes)
-    print(labels)
-    print(labels)
     print(Counter(labels))
 
     labels = to_categorical(labels, number_of_classes)
@@ -165,10 +164,10 @@ def train(images, labels, image_names):
     data_train, data_test, labels_train, labels_test = train_test_split(images,
                                                                         labels,
                                                                         test_size=0.1,
-                                                                        # shuffle=True,
-                                                                        # random_state=1
-                                                                        shuffle=False,
-                                                                        random_state=None
+                                                                        shuffle=True,
+                                                                        random_state=1
+                                                                        # shuffle=False,
+                                                                        # random_state=None
                                                                         )
     del images, labels
     # for i in range(10):

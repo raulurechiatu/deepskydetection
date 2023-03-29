@@ -1,4 +1,5 @@
 import csv
+import re
 import time
 from pathlib import Path
 
@@ -128,16 +129,32 @@ def get_galaxy_classes(galaxy_data, rotations=4):
         for i in range(rotations):
             labels.append(data[6][:2])
         index = class_to_number_mapping[data[6][:2].lower()]
-        # if index > 4:
-        #     index = 4
         for i in range(rotations):
             indexed_labels.append(index)
-    #     labels.append(data[6])
-    # list_set = set(labels)
-    # uniques = (list(list_set))
-    # for label in labels:
-    #     indexed_labels.append(uniques.index(label))
+    # indexed_labels = get_uniques(labels)
     return labels, indexed_labels
+
+
+def get_uniques(labels):
+    indexed_labels = []
+    list_set = set(labels)
+    uniques = (list(list_set))
+    for i in range(len(uniques)):
+        if re.search(r'[^a-zA-Z]', uniques[i]) is None:
+            continue
+        res = re.search(r'[^a-zA-Z]', uniques[i]).start()
+        uniques[i] = uniques[i][0: res]
+    list_set = set(uniques)
+    uniques = (list(list_set))
+
+    print(uniques)
+    for label in labels:
+        res = label
+        if re.search(r'[^a-zA-Z]', label) is not None:
+            res = re.search(r'[^a-zA-Z]', label).start()
+            res = label[0: res]
+        indexed_labels.append(uniques.index(res))
+    return indexed_labels
 
 
 def class_to_number(labels):
