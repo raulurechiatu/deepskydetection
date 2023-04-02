@@ -122,12 +122,14 @@ def get_csv_raw():
     return file_mappings, csv_data
 
 
-def get_labels(galaxy_data, rotations=4):
+def get_labels(galaxy_data):
     labels = []
+    before = time.time()
     for data in galaxy_data:
-        for i in range(rotations):
-            labels.append(get_label_value(data))
+        labels.append(get_label_value(data))
+    after = time.time()
 
+    print("Labels were assigned to images successfully in " + str(after-before))
     return None, labels
 
 

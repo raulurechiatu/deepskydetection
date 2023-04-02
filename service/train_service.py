@@ -20,7 +20,7 @@ crop_size = 180
 # Original size 414
 number_of_pixels = 64
 
-MODEL_SAVE_NAME = "L_CUSTOM_2_2_" + str(number_of_pixels) + "_"
+MODEL_SAVE_NAME = "L_CUSTOM_2_3_" + str(number_of_pixels) + "_"
 model = None
 
 

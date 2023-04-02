@@ -80,10 +80,13 @@ def load_images(folder_path, images_to_load=-1, offset=0):
     return galaxyzoo_images, loaded_image_names
 
 
-def get_rotations(images, rotations=4):
+def get_rotations(images, labels, rotations=4):
     # angle = int(360 / rotations)
+    before = time.time()
     rotated_images = np.empty(shape=(len(images) * rotations, number_of_pixels, number_of_pixels), dtype=np.ubyte)
+    labels_rotation = []
     index = 0
+    original_index = 0
     for image in images:
         # Set the first image as the original one
         rotated_images[index] = image
@@ -92,8 +95,13 @@ def get_rotations(images, rotations=4):
         for i in range(1, rotations):
             rotated_image = cv2.rotate(rotated_image, cv2.ROTATE_90_CLOCKWISE)
             rotated_images[index] = rotated_image
+            labels_rotation.append(labels[original_index])
             index += 1
-    return rotated_images
+        labels_rotation.append(labels[original_index])
+        original_index += 1
+    after = time.time()
+    print("Rotation of images for " + str(rotations) + " times was successful in " + str(after-before))
+    return rotated_images, labels_rotation
 
 
 def compare_segmentation_algorithms(path, image_name, download_segmented=False, display_images=False,

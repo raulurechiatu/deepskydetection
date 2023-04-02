@@ -7,6 +7,7 @@ import utils.image_processor as ip
 import service.db_manager as db
 import service.plot_builder as plot
 import service.train_service as ts
+import service.data_service as ds
 from segmentation import custom_processor as cp
 
 
@@ -72,11 +73,11 @@ def train_data():
     # Load the db files and search for a filename
     galaxy_data = db.get_data(galaxy_image_names)
 
-    # Get images rotated by the parameter number of times
-    galaxy_images = il.get_rotations(galaxy_images, rotations)
-    # print(galaxy_data)
-    # print(galaxy_image_names)
-    _, indexed_labels = db.get_labels(galaxy_data, rotations)
+    _, indexed_labels = db.get_labels(galaxy_data)
+    galaxy_images, indexed_labels = ds.remove_class(galaxy_images, indexed_labels, 5)
+
+    # Get images rotated by the parameter number of times and the labels multiplied by the same number
+    galaxy_images, indexed_labels = il.get_rotations(galaxy_images, indexed_labels, rotations)
     galaxy_images = galaxy_images / 255.0
 
     ts.train(galaxy_images, indexed_labels, galaxy_image_names)
