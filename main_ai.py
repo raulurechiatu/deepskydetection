@@ -76,7 +76,7 @@ def train_data():
     galaxy_images = il.get_rotations(galaxy_images, rotations)
     # print(galaxy_data)
     # print(galaxy_image_names)
-    labels, indexed_labels = db.get_galaxy_classes(galaxy_data, rotations)
+    _, indexed_labels = db.get_labels(galaxy_data, rotations)
     galaxy_images = galaxy_images / 255.0
 
     ts.train(galaxy_images, indexed_labels, galaxy_image_names)

@@ -20,7 +20,7 @@ crop_size = 180
 # Original size 414
 number_of_pixels = 64
 
-MODEL_SAVE_NAME = "CUSTOM_2_2_" + str(number_of_pixels) + "_"
+MODEL_SAVE_NAME = "L_CUSTOM_2_2_" + str(number_of_pixels) + "_"
 model = None
 
 
@@ -41,7 +41,7 @@ def train_model(data_train, data_test, labels_train, labels_test, data_validate,
         metrics=[keras.metrics.CategoricalAccuracy()]
     )
 
-    epochs = 15
+    epochs = 10
     result = model.fit(data_train,
                        labels_train,
                        epochs=epochs,
