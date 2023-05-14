@@ -20,7 +20,7 @@ crop_size = 180
 # Original size 414
 number_of_pixels = 64
 
-MODEL_SAVE_NAME = "L_CUSTOM_2_3_" + str(number_of_pixels) + "_"
+MODEL_SAVE_NAME = "L_CUSTOM_3_2_" + str(number_of_pixels) + "_"
 model = None
 
 
@@ -29,7 +29,7 @@ def train_model(data_train, data_test, labels_train, labels_test, data_validate,
     global MODEL_SAVE_NAME
     keras.backend.set_image_data_format('channels_first')
     # model = NetworkArchitectures.create_ResNet50V2(number_of_pixels, number_of_classes)
-    model = NetworkArchitectures.simple(number_of_pixels, number_of_classes)
+    model = NetworkArchitectures.custom_v3(number_of_pixels, number_of_classes)
 
     model.compile(
         optimizer=tf.optimizers.Adam(),
