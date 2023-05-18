@@ -64,6 +64,24 @@ def display_two_images(imageA, imageB, title=''):
     plt.show()
 
 
+def display_rotations(images, image_index, title=''):
+    f, axarr = plt.subplots(3, 4)
+    plt.suptitle(title)
+    axarr[0][0].imshow(images[image_index + 0], cmap='gray')
+    axarr[0][1].imshow(images[image_index + 1], cmap='gray')
+    axarr[0][2].imshow(images[image_index + 2], cmap='gray')
+    axarr[0][3].imshow(images[image_index + 3], cmap='gray')
+    axarr[1][0].imshow(images[image_index + 4], cmap='gray')
+    axarr[1][1].imshow(images[image_index + 5], cmap='gray')
+    axarr[1][2].imshow(images[image_index + 6], cmap='gray')
+    axarr[1][3].imshow(images[image_index + 7], cmap='gray')
+    axarr[2][0].imshow(images[image_index + 8], cmap='gray')
+    axarr[2][1].imshow(images[image_index + 9], cmap='gray')
+    axarr[2][2].imshow(images[image_index + 10], cmap='gray')
+    axarr[2][3].imshow(images[image_index + 11], cmap='gray')
+    plt.show()
+
+
 def display_image(image, title=''):
     # get_circles(image)
     f, axarr = plt.subplots(1)

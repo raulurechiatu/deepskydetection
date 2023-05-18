@@ -4,6 +4,7 @@ from PIL import Image
 from utils import progressbar, image_processor as ip
 from segmentation import custom_processor as cp
 from service import db_manager, plot_builder
+from random import shuffle
 import cv2
 import numpy as np
 
@@ -18,7 +19,7 @@ segmentation_path = "images/output/segmentation/"
 # galaxyzoo_images = []
 
 
-def load_images(folder_path, images_to_load=-1, offset=0):
+def load_images(folder_path, images_to_load=-1, offset=0, random=False):
     # Used only to check for unique items
     file_mappings, csv_data = db_manager.get_csv_raw()
 
@@ -29,6 +30,8 @@ def load_images(folder_path, images_to_load=-1, offset=0):
 
     before = time.time()
     image_names = os.listdir(final_path)
+    if random:
+        shuffle(image_names)
     loaded_image_names = []
     after = time.time()
     print("Execution time for listdir(getting the images name) is ", (after - before), "s for ", len(image_names),
@@ -93,13 +96,23 @@ def get_rotations(images, labels, rotations=4):
         rotated_image = image
         index += 1
         for i in range(1, rotations):
-            rotated_image = cv2.rotate(rotated_image, cv2.ROTATE_90_CLOCKWISE)
+            # rotated_image = cv2.rotate(rotated_image, cv2.ROTATE_90_CLOCKWISE)
+
+            M = cv2.getRotationMatrix2D((number_of_pixels / 2, number_of_pixels / 2), -30, 1)
+            rotated_image = cv2.warpAffine(rotated_image, M, (number_of_pixels, number_of_pixels))
+
             rotated_images[index] = rotated_image
             labels_rotation.append(labels[original_index])
             index += 1
         labels_rotation.append(labels[original_index])
         original_index += 1
     after = time.time()
+    # plot_builder.display_rotations(rotated_images, 0)
+    # plot_builder.display_rotations(rotated_images, 12)
+    # plot_builder.display_rotations(rotated_images, 24)
+    # plot_builder.display_rotations(rotated_images, 36)
+    # plot_builder.display_rotations(rotated_images, 48)
+    # plot_builder.display_rotations(rotated_images, 60)
     print("Rotation of images for " + str(rotations) + " times was successful in " + str(after-before))
     return rotated_images, labels_rotation
 
@@ -185,15 +198,20 @@ def load_image_pil(path):
 
 def load_image_cv(path, grayscale=0, resize=1):
     final_path = Path(__file__).parent / path
+    # original = cv2.imread(str(final_path))
+    # plot_builder.display_image(original)
     original = cv2.imread(str(final_path), grayscale)
 
+    # plot_builder.display_image(original)
     desired_shape = (number_of_pixels, number_of_pixels)
     original = crop(original, crop_size, crop_size)
+    # plot_builder.display_image(original)
     if original is None:
         return np.zeros(desired_shape)
     if original.shape != desired_shape:
         # plot_builder.display_two_images(original, cropped)
         original = cv2.resize(original, desired_shape, interpolation=cv2.INTER_AREA)
+    # plot_builder.display_image(original)
     return original
 
 

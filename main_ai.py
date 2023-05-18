@@ -9,6 +9,7 @@ import service.plot_builder as plot
 import service.train_service as ts
 import service.data_service as ds
 from segmentation import custom_processor as cp
+import cv2
 
 
 ts.configure_gpu()
@@ -25,8 +26,8 @@ galaxies_images_path = "../resources/galaxies/"
 stars_images_path = "../resources/stars/"
 
 # Worked with 10k
-images_to_load = 500
-rotations = 12
+images_to_load = 5000
+rotations = 8
 
 error_threshold = 0.85
 # error_threshold = 0.0016
@@ -69,7 +70,7 @@ def compare_segmentation():
 
 
 def train_data():
-    galaxy_images, galaxy_image_names = il.load_images(galaxy_zoo_images_path, images_to_load, 0)
+    galaxy_images, galaxy_image_names = il.load_images(galaxy_zoo_images_path, images_to_load, 0, random=False)
     # Load the db files and search for a filename
     galaxy_data = db.get_data(galaxy_image_names)
 
@@ -83,7 +84,7 @@ def train_data():
     ts.train(galaxy_images, indexed_labels, galaxy_image_names)
 
 
-def evaluate_data():
+def evaluate_image():
     original_image = il.load_image_matplot(images_parent_path + str(image_name + '.png'))
     original_image = ip.apply_filters(original_image, gaussian=False)
     cp.identify_and_outline_objects(original_image, outline=False, save=True, zoom_from_center=15)
@@ -102,9 +103,47 @@ def evaluate_data():
     plt.show()
 
 
+def evaluate_data(evaluation_images_number):
+    galaxy_images, galaxy_image_names = il.load_images(galaxy_zoo_images_path, evaluation_images_number, 0, random=True)
+    galaxy_data = db.get_data(galaxy_image_names)
+
+    _, indexed_labels = db.get_labels(galaxy_data)
+    galaxy_images, indexed_labels = ds.remove_class(galaxy_images, indexed_labels, 5)
+    galaxy_images = galaxy_images / 255.0
+    ts.evaluate(galaxy_images, indexed_labels)
+
+
+def live_detection():
+    # cv2.namedWindow("preview")
+    vc = cv2.VideoCapture(0)
+    if vc.isOpened():  # try to get the first frame
+        rval, frame = vc.read()
+    else:
+        rval = False
+
+    while rval:
+        rval, frame = vc.read()
+        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        # original_image = ip.apply_filters(frame, gaussian=False)
+        f, axarr = plt.subplots(1)
+        axarr.imshow(gray_frame, cmap='gray')
+        cp.identify_and_outline_objects(gray_frame, plt=plt, outline=True, save=True)
+        plt.show()
+        # cv2.imshow("preview", grayFrame)
+
+        key = cv2.waitKey(20)
+        if key == 27:  # exit on ESC
+            break
+
+    vc.release()
+    # cv2.destroyWindow("preview")
+
+
 if __name__ == '__main__':
     train_data()
-    # evaluate_data()
+    # evaluate_image()
+    # evaluate_data(1000)
+    # live_detection()
 
     # print(multiprocessing.cpu_count())
     # compare_data()
