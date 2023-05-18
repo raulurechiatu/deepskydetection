@@ -26,8 +26,8 @@ galaxies_images_path = "../resources/galaxies/"
 stars_images_path = "../resources/stars/"
 
 # Worked with 10k
-images_to_load = 5000
-rotations = 8
+images_to_load = 4000
+rotations = 12
 
 error_threshold = 0.85
 # error_threshold = 0.0016
@@ -110,7 +110,7 @@ def evaluate_data(evaluation_images_number):
     _, indexed_labels = db.get_labels(galaxy_data)
     galaxy_images, indexed_labels = ds.remove_class(galaxy_images, indexed_labels, 5)
     galaxy_images = galaxy_images / 255.0
-    ts.evaluate(galaxy_images, indexed_labels)
+    ts.evaluate(galaxy_images, indexed_labels, manual=True)
 
 
 def live_detection():
@@ -142,7 +142,7 @@ def live_detection():
 if __name__ == '__main__':
     train_data()
     # evaluate_image()
-    # evaluate_data(1000)
+    # evaluate_data(100)
     # live_detection()
 
     # print(multiprocessing.cpu_count())

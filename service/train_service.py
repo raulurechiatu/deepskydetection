@@ -16,7 +16,6 @@ from service.data_service import f1_m
 
 from utils import NetworkArchitectures
 
-
 # The image is firstly cropped to this size and after this is resized to the next value
 crop_size = 180
 # Original size 414
@@ -42,7 +41,8 @@ def train_model(data_train, data_test, labels_train, labels_test, data_validate,
         loss=tf.losses.CategoricalCrossentropy(),
         # loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
         # loss=tf.losses.MeanSquaredError(),
-        metrics=[keras.metrics.CategoricalAccuracy(), keras.metrics.Precision(), keras.metrics.Recall(), f1_m, keras.metrics.AUC()]
+        metrics=[keras.metrics.CategoricalAccuracy(), keras.metrics.Precision(), keras.metrics.Recall(), f1_m,
+                 keras.metrics.AUC()]
     )
 
     epochs = 15
@@ -84,9 +84,6 @@ def train_model(data_train, data_test, labels_train, labels_test, data_validate,
     print("correct prediction: ", correct_predictions)
     print("computed accuracy: ", sum(bool(x) for x in correct_predictions) / len(correct_predictions))
 
-    evaluate(data_test, labels_test.tolist(), manual=True)
-    evaluate(data_validate, labels_validate.tolist(), manual=True)
-
     # reset model
     keras.backend.clear_session()
 
@@ -123,7 +120,8 @@ def get_model(custom_metrics=False):
             loss=tf.losses.CategoricalCrossentropy(),
             # loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
             # loss=tf.losses.MeanSquaredError(),
-            metrics=[keras.metrics.CategoricalAccuracy(), keras.metrics.Precision(), keras.metrics.Recall(), f1_m, keras.metrics.AUC()]
+            metrics=[keras.metrics.CategoricalAccuracy(), keras.metrics.Precision(), keras.metrics.Recall(), f1_m,
+                     keras.metrics.AUC()]
         )
     return model
 
@@ -206,9 +204,10 @@ def train(images, labels, image_names):
     data_train = data_train[:-validation_set_size]
     labels_train = labels_train[:-validation_set_size]
 
-
     # reshape data for model compatibility
     data_train = data_train.reshape(-1, 1, number_of_pixels, number_of_pixels)
+    data_test_orig = np.copy(data_test)
+    data_validate_orig = np.copy(data_validate)
     data_test = data_test.reshape(-1, 1, number_of_pixels, number_of_pixels)
     data_validate = data_validate.reshape(-1, 1, number_of_pixels, number_of_pixels)
 
@@ -220,3 +219,5 @@ def train(images, labels, image_names):
 
     train_model(data_train, data_test, labels_train, labels_test, data_validate, labels_validate, number_of_classes)
 
+    evaluate(data_test_orig, np.where(labels_test == 1)[1], manual=True)
+    evaluate(data_validate_orig, np.where(labels_validate == 1)[1], manual=True)
