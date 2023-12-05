@@ -13,6 +13,7 @@ from keras.optimizers import SGD
 from collections import Counter
 from service import plot_builder
 from service.data_service import f1_m
+from keras.utils import plot_model
 
 from utils import NetworkArchitectures
 
@@ -21,7 +22,7 @@ crop_size = 180
 # Original size 414
 number_of_pixels = 64
 
-MODEL_SAVE_NAME = "L_RESNET_4_1_" + str(number_of_pixels) + "_"
+MODEL_SAVE_NAME = "L_CUSTOM_TEST_1_" + str(number_of_pixels) + "_"
 # MODEL_SAVE_NAME = "L_CUSTOM_2_3_64_90240_10ep_96.37acc"
 # MODEL_SAVE_NAME = "L_CUSTOM_2_2_64_60000_10ep"
 model = None
@@ -31,8 +32,10 @@ def train_model(data_train, data_test, labels_train, labels_test, data_validate,
     # configuring keras backend format for channel position
     global MODEL_SAVE_NAME, model
     keras.backend.set_image_data_format('channels_first')
-    model = NetworkArchitectures.create_ResNet50V2(number_of_pixels, number_of_classes)
-    # model = NetworkArchitectures.custom_v1(number_of_pixels, number_of_classes)
+    # model = NetworkArchitectures.create_ResNet50V2(number_of_pixels, number_of_classes)
+    model = NetworkArchitectures.custom_v1(number_of_pixels, number_of_classes)
+    # model = NetworkArchitectures.custom_v5(number_of_pixels, number_of_classes)
+    # model = NetworkArchitectures.custom_v6(number_of_pixels, number_of_classes)
 
     model.compile(
         optimizer=tf.optimizers.Adam(),
@@ -45,12 +48,12 @@ def train_model(data_train, data_test, labels_train, labels_test, data_validate,
                  keras.metrics.AUC()]
     )
 
-    epochs = 15
+    epochs = 10
     result = model.fit(data_train,
                        labels_train,
                        epochs=epochs,
                        validation_data=(data_test, labels_test),
-                       batch_size=16
+                       batch_size=128
                        # callbacks=[es]
                        # callbacks=[metrics]
                        # shuffle = True # optional parameter for composites only
@@ -108,10 +111,12 @@ def configure_gpu():
             print("Error: ".e)
 
 
-def get_model(custom_metrics=False):
+def get_model(model_name=None, custom_metrics=False):
+    if model_name is None:
+        model_name = MODEL_SAVE_NAME + ".h5"
     global model
     if model is None:
-        model = keras.models.load_model("models/" + MODEL_SAVE_NAME + ".h5")
+        model = keras.models.load_model("models/" + model_name, custom_objects={"f1_m": f1_m})
     if custom_metrics:
         model.compile(
             optimizer=tf.optimizers.Adam(),
@@ -123,39 +128,54 @@ def get_model(custom_metrics=False):
             metrics=[keras.metrics.CategoricalAccuracy(), keras.metrics.Precision(), keras.metrics.Recall(), f1_m,
                      keras.metrics.AUC()]
         )
+    plot_model(model, to_file='model_plot.png', show_shapes=True, show_layer_names=True)
     return model
 
 
-def evaluate(images, labels, manual=False):
+def evaluate(images, labels, model_name=None, manual=False):
     global model
-    model = get_model(True)
+    model = get_model(model_name, True)
 
     images = images.reshape(-1, 1, number_of_pixels, number_of_pixels)
 
+    number_of_classes = len(set(labels))
     if not manual and labels is not None:
-        number_of_classes = len(set(labels))
         categorical_labels = to_categorical(labels, number_of_classes)
         loss, acc, prec, rec, f1, auc = model.evaluate(images, categorical_labels, verbose=1)
         print(f"Loss: {loss}, acc: {acc}, precision: {prec}, recall: {rec}, f1: {f1}, auc: {auc}")
 
     # for multi-class classification
-    test_prediction = np.argmax(model.predict(images), axis=-1)
+    scores = model.predict(images)
+    test_prediction = np.argmax(scores, axis=-1)
 
-    print("data_test.shape: ", images.shape)
-    print("test_prediction.shape: ", test_prediction.shape)
-    # print("test_prediction: ", test_prediction)
     if labels is not None:
         print(classification_report(labels, test_prediction))
         correct_predictions = []
         prediction_mistakes = []
+        results = []
         for label_id in range(len(labels)):
             correct_predictions.append(labels[label_id] == test_prediction[label_id])
             if labels[label_id] != test_prediction[label_id]:
                 prediction_mistakes.append((labels[label_id], test_prediction[label_id]))
+            results.append((labels[label_id], test_prediction[label_id]))
         print("correct prediction: ", correct_predictions)
         print("prediction mistakes ", str(len(prediction_mistakes)), " (expected, actual): ", prediction_mistakes)
         print("computed accuracy: ", sum(bool(x) for x in correct_predictions) / len(correct_predictions))
 
+    print("data_test.shape: ", images.shape)
+    print("test_prediction.shape: ", test_prediction.shape)
+    # print("test_prediction: ", test_prediction)
+    # roc curve for classes
+    fpr = {}
+    tpr = {}
+    thresh = {}
+
+    for i in range(number_of_classes):
+        fpr[i], tpr[i], thresh[i] = metrics.roc_curve(labels, scores[:,i], pos_label=i)
+
+    plot_builder.plot_roc_curve(fpr, tpr)
+
+    return results
     # df = pd.DataFrame(result.history)
     # df.plot(figsize=(8, 5))
     # plt.grid(True)

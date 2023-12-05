@@ -5,7 +5,7 @@ from segmentation import custom_processor as cp
 from utils import image_processor as ip
 import numpy as np
 import cv2 as cv
-
+from statistics import mean
 
 def display_images(identified_objects, catalog_images_path):
     for identified_object in identified_objects:
@@ -90,6 +90,14 @@ def display_image(image, title=''):
     plt.show()
 
 
+def display_image_prediction(image, title_1='', title_2=''):
+    # get_circles(image)
+    f, axarr = plt.subplots(1)
+    plt.suptitle(title_1)
+    axarr.imshow(image, cmap='gray')
+    plt.show()
+
+
 def get_circles(img):
     hh, ww = img.shape[:2]
     min_dist = int(ww/10)
@@ -105,3 +113,24 @@ def get_circles(img):
         r = int(r/4)
         cv.circle(result, (x, y), r, (255, 255, 255), 1)
     return result
+
+
+def plot_roc_curve(fpr, tpr):
+    # plotting
+    fpr_mean = mean(fpr)
+    tpr_mean = mean(tpr)
+    plt.plot(fpr[0], tpr[0], linestyle='solid', color='orange', label='Class 0 vs Rest')
+    plt.plot(fpr[1], tpr[1], linestyle='solid', color='green', label='Class 1 vs Rest')
+    plt.plot(fpr[2], tpr[2], linestyle='solid', color='blue', label='Class 2 vs Rest')
+    plt.plot(fpr[3], tpr[3], linestyle='solid', color='red', label='Class 3 vs Rest')
+    plt.plot(fpr[4], tpr[4], linestyle='solid', color='yellow', label='Class 4 vs Rest')
+    plt.plot(fpr_mean, tpr_mean, linestyle='--', color='darkblue', label='Average ROC Curve')
+    plt.axline((0, 0), (1, 1), linestyle='--', color='gray')
+    plt.xlim(right=1, left=-0.02)
+    plt.ylim(top=1.02, bottom=-0.02)
+    plt.title('Multiclass ROC curve')
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive rate')
+    plt.legend(loc='best')
+    plt.savefig('Multiclass ROC', dpi=300)
+    plt.show()

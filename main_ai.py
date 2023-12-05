@@ -35,6 +35,19 @@ error_threshold = 0.85
 total_threads_number = 5
 
 
+def get_class_name(class_number):
+    if class_number == 0:
+        return "Round smooth"
+    if class_number == 1:
+        return "In-between smooth"
+    if class_number == 2:
+        return "Cigar-shaped smooth"
+    if class_number == 3:
+        return "Edge-on"
+    if class_number == 4:
+        return "Spiral"
+
+
 def compare_data():
     identified_objects = ic.start_comparison_process(images_parent_path + str(image_name + '.png'),
                                                      galaxy_zoo_images_path,
@@ -84,7 +97,7 @@ def train_data():
     ts.train(galaxy_images, indexed_labels, galaxy_image_names)
 
 
-def evaluate_image():
+def evaluate_image(model_name=None):
     original_image = il.load_image_matplot(images_parent_path + str(image_name + '.png'))
     original_image = ip.apply_filters(original_image, gaussian=False)
     cp.identify_and_outline_objects(original_image, outline=False, save=True, zoom_from_center=15)
@@ -95,7 +108,7 @@ def evaluate_image():
 
     final_images = np.array(final_images)
     final_images = final_images.reshape(-1, 1, ts.number_of_pixels, ts.number_of_pixels)
-    ts.evaluate(final_images, None)
+    ts.evaluate(final_images, None, model_name=model_name)
 
     f, axarr = plt.subplots(1)
     axarr.imshow(original_image, cmap='gray')
@@ -103,14 +116,21 @@ def evaluate_image():
     plt.show()
 
 
-def evaluate_data(evaluation_images_number):
-    galaxy_images, galaxy_image_names = il.load_images(galaxy_zoo_images_path, evaluation_images_number, 0, random=True)
+def evaluate_data(evaluation_images_number, model_name=None):
+    galaxy_images, galaxy_image_names = il.load_images(galaxy_zoo_images_path, evaluation_images_number, 0, random=False)
+    galaxy_images_r, galaxy_image_names_r = il.load_images(galaxy_zoo_images_path, round(evaluation_images_number/5), 0, random=True)
+    galaxy_images = np.concatenate((galaxy_images, galaxy_images_r))
+    galaxy_image_names = np.concatenate((galaxy_image_names, galaxy_image_names_r))
     galaxy_data = db.get_data(galaxy_image_names)
 
     _, indexed_labels = db.get_labels(galaxy_data)
     galaxy_images, indexed_labels = ds.remove_class(galaxy_images, indexed_labels, 5)
     galaxy_images = galaxy_images / 255.0
-    ts.evaluate(galaxy_images, indexed_labels, manual=True)
+    results = ts.evaluate(galaxy_images, indexed_labels, model_name, manual=True)
+    print("results(predicted, actual): ", results)
+    for i in range(len(results)):
+        title = "Predicted: " + str(results[i][0]) + " (" + get_class_name(results[i][0]) + ")  |  " + " Actual: " + str(results[i][1]) + " (" + get_class_name(results[i][1]) + ")"
+        plot.display_image(galaxy_images[i], title)
 
 
 def live_detection():
@@ -142,7 +162,7 @@ def live_detection():
 if __name__ == '__main__':
     train_data()
     # evaluate_image()
-    # evaluate_data(100)
+    # evaluate_data(3000, "valid/L_CUSTOM_2_3_64_90240_10ep_96.37acc.h5")
     # live_detection()
 
     # print(multiprocessing.cpu_count())

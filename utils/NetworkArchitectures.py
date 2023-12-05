@@ -1,6 +1,6 @@
 import keras
 import tensorflow as tf
-from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, BatchNormalization, Activation, Dropout
 from keras.models import Sequential
 
 from keras.layers import Input
@@ -29,6 +29,124 @@ def custom_v3(number_of_pixels, classes):
     model.add(Flatten())
     model.add(Dense(512, activation='relu'))
     model.add(Dropout(0.5))
+    model.add(Dense(classes, activation='softmax'))
+    return model
+
+
+def custom_v5(number_of_pixels, classes):
+    model = Sequential()
+
+    # First Convolutional Block
+    model.add(Conv2D(64, (3, 3), input_shape=(1, number_of_pixels, number_of_pixels), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Conv2D(64, (3, 3), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+
+    # Second Convolutional Block
+    model.add(Conv2D(128, (3, 3), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Conv2D(128, (3, 3), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+
+    # Third Convolutional Block
+    model.add(Conv2D(256, (3, 3), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Conv2D(256, (3, 3), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+
+    # Fourth Convolutional Block
+    model.add(Conv2D(512, (3, 3), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Conv2D(512, (3, 3), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+
+    # Flatten the feature maps
+    model.add(Flatten())
+
+    # First Fully Connected Layer
+    model.add(Dense(512))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Dropout(0.2))
+
+    # Second Fully Connected Layer
+    model.add(Dense(1024))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5))
+
+    # Output Layer (Adjust the units based on the number of classes)
+    model.add(Dense(classes, activation='softmax'))
+    return model
+
+
+def custom_v6(number_of_pixels, classes):
+    model = Sequential()
+
+    # First Convolutional Block
+    model.add(Conv2D(512, (3, 3), input_shape=(1, number_of_pixels, number_of_pixels), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Conv2D(512, (3, 3), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+
+    # Second Convolutional Block
+    model.add(Conv2D(256, (3, 3), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Conv2D(256, (3, 3), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+
+    # Third Convolutional Block
+    model.add(Conv2D(128, (3, 3), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Conv2D(128, (3, 3), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+
+    # Fourth Convolutional Block
+    model.add(Conv2D(64, (3, 3), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Conv2D(64, (3, 3), padding='same'))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+
+    # Flatten the feature maps
+    model.add(Flatten())
+
+    # First Fully Connected Layer
+    model.add(Dense(512))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Dropout(0.2))
+
+    # Second Fully Connected Layer
+    model.add(Dense(1024))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(Dropout(0.5))
+
+    # Output Layer (Adjust the units based on the number of classes)
     model.add(Dense(classes, activation='softmax'))
     return model
 
