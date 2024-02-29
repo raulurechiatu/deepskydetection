@@ -22,8 +22,9 @@ crop_size = 180
 # Original size 414
 number_of_pixels = 64
 
-MODEL_SAVE_NAME = "L_CUSTOM_TEST_1_" + str(number_of_pixels) + "_"
-# MODEL_SAVE_NAME = "L_CUSTOM_2_3_64_90240_10ep_96.37acc"
+# MODEL_SAVE_NAME = "L_CUSTOM_TEST_2_" + str(number_of_pixels) + "_"
+# MODEL_SAVE_NAME = "L_RESNET_1_" + str(number_of_pixels) + "_"
+MODEL_SAVE_NAME = "L_CUSTOM_1_" + str(number_of_pixels) + "_"
 # MODEL_SAVE_NAME = "L_CUSTOM_2_2_64_60000_10ep"
 model = None
 
@@ -34,6 +35,7 @@ def train_model(data_train, data_test, labels_train, labels_test, data_validate,
     keras.backend.set_image_data_format('channels_first')
     # model = NetworkArchitectures.create_ResNet50V2(number_of_pixels, number_of_classes)
     model = NetworkArchitectures.custom_v1(number_of_pixels, number_of_classes)
+    # model = NetworkArchitectures.custom_v3(number_of_pixels, number_of_classes)
     # model = NetworkArchitectures.custom_v5(number_of_pixels, number_of_classes)
     # model = NetworkArchitectures.custom_v6(number_of_pixels, number_of_classes)
 
@@ -48,12 +50,12 @@ def train_model(data_train, data_test, labels_train, labels_test, data_validate,
                  keras.metrics.AUC()]
     )
 
-    epochs = 10
+    epochs = 15
     result = model.fit(data_train,
                        labels_train,
                        epochs=epochs,
                        validation_data=(data_test, labels_test),
-                       batch_size=128
+                       batch_size=16
                        # callbacks=[es]
                        # callbacks=[metrics]
                        # shuffle = True # optional parameter for composites only
@@ -61,7 +63,7 @@ def train_model(data_train, data_test, labels_train, labels_test, data_validate,
 
     # save model
     MODEL_SAVE_NAME += "_" + str(epochs) + "ep"
-    model.save('models/' + MODEL_SAVE_NAME + ".h5")
+    model.save('models/10class/' + MODEL_SAVE_NAME + ".h5")
 
     # original precision eval implementation
     loss, acc, prec, rec, f1, auc = model.evaluate(data_test, labels_test, verbose=1)
@@ -173,7 +175,7 @@ def evaluate(images, labels, model_name=None, manual=False):
     for i in range(number_of_classes):
         fpr[i], tpr[i], thresh[i] = metrics.roc_curve(labels, scores[:,i], pos_label=i)
 
-    plot_builder.plot_roc_curve(fpr, tpr)
+    plot_builder.plot_roc_curve(fpr, tpr, number_of_classes)
 
     return results
     # df = pd.DataFrame(result.history)

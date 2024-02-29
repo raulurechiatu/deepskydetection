@@ -115,15 +115,21 @@ def get_circles(img):
     return result
 
 
-def plot_roc_curve(fpr, tpr):
+def plot_roc_curve(fpr, tpr, number_of_classes):
     # plotting
     fpr_mean = mean(fpr)
     tpr_mean = mean(tpr)
-    plt.plot(fpr[0], tpr[0], linestyle='solid', color='orange', label='Class 0 vs Rest')
-    plt.plot(fpr[1], tpr[1], linestyle='solid', color='green', label='Class 1 vs Rest')
-    plt.plot(fpr[2], tpr[2], linestyle='solid', color='blue', label='Class 2 vs Rest')
-    plt.plot(fpr[3], tpr[3], linestyle='solid', color='red', label='Class 3 vs Rest')
-    plt.plot(fpr[4], tpr[4], linestyle='solid', color='yellow', label='Class 4 vs Rest')
+    colors = get_random_colors()
+
+    for i in range(number_of_classes):
+        label = 'Class ' + str(i)
+        plt.plot(fpr[i], tpr[i], linestyle='solid', color=colors[i], label=label)
+
+    # plt.plot(fpr[0], tpr[0], linestyle='solid', color='orange', label='Class 0 vs Rest')
+    # plt.plot(fpr[1], tpr[1], linestyle='solid', color='green', label='Class 1 vs Rest')
+    # plt.plot(fpr[2], tpr[2], linestyle='solid', color='blue', label='Class 2 vs Rest')
+    # plt.plot(fpr[3], tpr[3], linestyle='solid', color='red', label='Class 3 vs Rest')
+    # plt.plot(fpr[4], tpr[4], linestyle='solid', color='yellow', label='Class 4 vs Rest')
     plt.plot(fpr_mean, tpr_mean, linestyle='--', color='darkblue', label='Average ROC Curve')
     plt.axline((0, 0), (1, 1), linestyle='--', color='gray')
     plt.xlim(right=1, left=-0.02)
@@ -134,3 +140,18 @@ def plot_roc_curve(fpr, tpr):
     plt.legend(loc='best')
     plt.savefig('Multiclass ROC', dpi=300)
     plt.show()
+
+
+def get_random_colors():
+    clrs = np.linspace(0, 1, 18)
+    np.random.shuffle(clrs)
+    colors = []
+    for i in range(0, 72, 4):
+        idx = np.arange( 0, 18, 1 )
+        np.random.shuffle(idx)
+        r = clrs[idx[0]]
+        g = clrs[idx[1]]
+        b = clrs[idx[2]]
+        a = clrs[idx[3]]
+        colors.append([r, g, b, a])
+    return colors

@@ -85,6 +85,8 @@ def load_images(folder_path, images_to_load=-1, offset=0, random=False):
 
 def get_rotations(images, labels, rotations=4):
     # angle = int(360 / rotations)
+    if rotations == 1:
+        return images, labels
     before = time.time()
     rotated_images = np.empty(shape=(len(images) * rotations, number_of_pixels, number_of_pixels), dtype=np.ubyte)
     labels_rotation = []
