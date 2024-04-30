@@ -185,9 +185,9 @@ def evaluate(images, labels, model_name=None, manual=False):
     # plt.show()
 
 
-def evaluate_image(img):
+def evaluate_image(img, model_name:None):
     final_images = img.reshape(-1, 1, number_of_pixels, number_of_pixels)
-    return np.argmax(get_model().predict(final_images, verbose=0), axis=-1)
+    return np.argmax(get_model(model_name).predict(final_images, verbose=0), axis=-1)
 
 
 def train(images, labels, image_names):

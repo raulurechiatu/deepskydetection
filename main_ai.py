@@ -18,7 +18,7 @@ ts.configure_gpu()
 # Path for the initial image to start the algorithm on
 # This image is for example a picture took with a personal telescope or obtain via the internet to be analyzed
 images_parent_path = "../images/deepsky/"
-image_name = 'andromeda'
+image_name = 'smallest_jswt_2'
 
 galaxy_zoo_images_path = "../resources/galaxyzoo2/images_gz2/images/"
 nebulae_images_path = "../resources/nebulae/images/"
@@ -26,8 +26,8 @@ galaxies_images_path = "../resources/galaxies/"
 stars_images_path = "../resources/stars/"
 
 # Worked with 10k
-images_to_load = 15000
-rotations = 4
+images_to_load = 4000
+rotations = 12
 
 error_threshold = 0.85
 # error_threshold = 0.0016
@@ -36,18 +36,16 @@ total_threads_number = 5
 
 
 def get_class_name(class_number):
-    # if class_number == 0:
-    #     return "Round smooth"
-    # if class_number == 1:
-    #     return "In-between smooth"
-    # if class_number == 2:
-    #     return "Cigar-shaped smooth"
-    # if class_number == 3:
-    #     return "Edge-on"
-    # if class_number == 4:
-    #     return "Spiral"
-    classes = ["E3", "E0", "E7", "Sa", "Sb", "Sc", "SBa", "SBb", "SBc", "Irregular"]
-    return classes[class_number]
+    if class_number == 0:
+        return "Round smooth"
+    if class_number == 1:
+        return "In-between smooth"
+    if class_number == 2:
+        return "Cigar-shaped smooth"
+    if class_number == 3:
+        return "Edge-on"
+    if class_number == 4:
+        return "Spiral"
 
 
 def compare_data():
@@ -61,7 +59,27 @@ def compare_data():
         print("No similarities found on the catalog")
         exit()
 
+    # Load the db files and search for a filename
+    # db.load_dbs()
+    # db.search_file(identified_objects)
+
     plot.display_images(identified_objects, galaxy_zoo_images_path)
+
+    ic.download_segmented_objects(image_name)
+    # il.load_images(galaxy_zoo_images_path, 2000, 0)
+
+    # il.compare_filters("test")
+
+
+def compare_segmentation():
+    # algorithms = ['custom', 'sobel', 'laplace', 'threshold']
+    algorithm = 'custom'
+    # for algorithm in algorithms:
+    _, exec_time = il.compare_segmentation_algorithms(images_parent_path + str(image_name + '.png'), image_name, download_segmented=False, display_images=True, algorithm=algorithm)
+    if exec_time != -1:
+        print("Execution time for algorithm ", algorithm, " is ", exec_time, "s")
+    else:
+        print("For the execution time please call the method with the value of the display_images parameter set to True!")
 
 
 def train_data():
@@ -70,13 +88,24 @@ def train_data():
     galaxy_data = db.get_data(galaxy_image_names)
 
     _, indexed_labels = db.get_labels(galaxy_data)
-    galaxy_images, indexed_labels = ds.remove_class(galaxy_images, indexed_labels, 10)
+    galaxy_images, indexed_labels = ds.remove_class(galaxy_images, indexed_labels, 5)
 
     # Get images rotated by the parameter number of times and the labels multiplied by the same number
     galaxy_images, indexed_labels = il.get_rotations(galaxy_images, indexed_labels, rotations)
     galaxy_images = galaxy_images / 255.0
 
     ts.train(galaxy_images, indexed_labels, galaxy_image_names)
+
+
+def evaluate_single_image(image_name, model_name=None):
+    original_image = il.load_image_matplot(images_parent_path + str(image_name + '.png'))
+    predicted = ts.evaluate_image(original_image, model_name=model_name)
+    print(predicted)
+
+    f, axarr = plt.subplots(1)
+    plt.title("Predicted: " + str(predicted[0]) + " (" + get_class_name(predicted[0]) + ")")
+    axarr.imshow(original_image, cmap='gray')
+    plt.show()
 
 
 def evaluate_image(model_name=None):
@@ -147,11 +176,31 @@ def live_detection():
     # cv2.destroyWindow("preview")
 
 
+def cluster_classification(evaluation_images_number):
+    galaxy_images, galaxy_image_names = il.load_images(galaxy_zoo_images_path, evaluation_images_number, 0, random=False)
+    galaxy_images_r, galaxy_image_names_r = il.load_images(galaxy_zoo_images_path, round(evaluation_images_number/5), 0, random=True)
+    galaxy_images = np.concatenate((galaxy_images, galaxy_images_r))
+    galaxy_image_names = np.concatenate((galaxy_image_names, galaxy_image_names_r))
+    galaxy_data = db.get_data(galaxy_image_names)
+
+    _, indexed_labels = db.get_labels(galaxy_data)
+    # galaxy_data = db.remove_non_float(galaxy_data)
+    # galaxy_images, indexed_labels = ds.remove_class(galaxy_images, indexed_labels, 5)
+    classification_data = db.get_classification_data(galaxy_data, True)
+    # classification_data, labels = classifier.classify2(classification_data)
+    # print(labels)
+    # print(len(labels))
+    print(indexed_labels)
+    print(len(indexed_labels))
+
+
 if __name__ == '__main__':
     # train_data()
-    # evaluate_image()
-    # evaluate_data(100, None, False)
-    evaluate_data(100, "valid/L_CUSTOM_2_3_64_90240_10ep_96.37acc.h5")
+    # evaluate_image("valid/L_CUSTOM_2_3_64_90240_10ep_96.37acc.h5")
+    # evaluate_single_image("6 - prep", "valid/L_CUSTOM_2_3_64_90240_10ep_96.37acc.h5")
+    evaluate_single_image("3 - prep", "L_CUSTOM_TEST_1_64_44856_10ep.h5")
+    # evaluate_data(3000, "valid/L_CUSTOM_2_3_64_90240_10ep_96.37acc.h5")
+    # cluster_classification(1000)
     # live_detection()
 
     # print(multiprocessing.cpu_count())
