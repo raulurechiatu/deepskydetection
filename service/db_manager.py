@@ -136,19 +136,22 @@ def get_labels(galaxy_data):
 def get_label_value(data):
     # column_offset should be 0, 1 or 2
     # this represents which value to take from the table, 0 is fraction, 1 is weighted fraction, 2 is debiased
-    # column_offset = 0
-    # if float(data[11 + column_offset]) >= 0.469 and float(data[101 + column_offset]) >= 0.5:  # Completely round smooth
-    #     return 0
-    # elif float(data[11 + column_offset]) >= 0.469 and float(data[107 + column_offset]) >= 0.5:  # In between smooth
-    #     return 1
-    # elif float(data[11 + column_offset]) >= 0.469 and float(data[113 + column_offset]) >= 0.5:  # Cigar shaped smooth
-    #     return 2
-    # elif float(data[17 + column_offset]) >= 0.43 and float(data[29 + column_offset]) >= 0.602:  # Edge on
-    #     return 3
-    # elif float(data[17 + column_offset]) >= 0.43 and float(data[35 + column_offset]) >= 0.715 and float(data[53 + column_offset]) >= 0.619:  # Sprial
-    #     return 4
-    # else:
-    #     return 5
+    column_offset = 0
+    if float(data[11 + column_offset]) >= 0.469 and float(data[101 + column_offset]) >= 0.5:  # Completely round smooth
+        return 0
+    elif float(data[11 + column_offset]) >= 0.469 and float(data[107 + column_offset]) >= 0.5:  # In between smooth
+        return 1
+    elif float(data[11 + column_offset]) >= 0.469 and float(data[113 + column_offset]) >= 0.5:  # Cigar shaped smooth
+        return 2
+    elif float(data[17 + column_offset]) >= 0.43 and float(data[29 + column_offset]) >= 0.602:  # Edge on
+        return 3
+    elif float(data[17 + column_offset]) >= 0.43 and float(data[35 + column_offset]) >= 0.715 and float(data[53 + column_offset]) >= 0.619:  # Sprial
+        return 4
+    else:
+        return 5
+
+
+def get_labels_10_class(data):
     if data[6].startswith('Ei'):
         return 0
     elif data[6].startswith('Er'):
