@@ -28,7 +28,7 @@ galaxies_images_path = "../resources/galaxies/"
 stars_images_path = "../resources/stars/"
 
 # Worked with 10k
-images_to_load = 4000
+images_to_load = -1
 rotations = 12
 
 error_threshold = 0.85
@@ -73,6 +73,32 @@ def compare_data():
     # il.compare_filters("test")
 
 
+def live_detection():
+    # cv2.namedWindow("preview")
+    vc = cv2.VideoCapture(0)
+    if vc.isOpened():  # try to get the first frame
+        rval, frame = vc.read()
+    else:
+        rval = False
+
+    while rval:
+        rval, frame = vc.read()
+        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        # original_image = ip.apply_filters(frame, gaussian=False)
+        f, axarr = plt.subplots(1)
+        axarr.imshow(gray_frame, cmap='gray')
+        cp.identify_and_outline_objects(gray_frame, plt=plt, outline=True, save=True)
+        plt.show()
+        # cv2.imshow("preview", grayFrame)
+
+        key = cv2.waitKey(20)
+        if key == 27:  # exit on ESC
+            break
+
+    vc.release()
+    # cv2.destroyWindow("preview")
+
+
 def compare_segmentation():
     # algorithms = ['custom', 'sobel', 'laplace', 'threshold']
     algorithm = 'custom'
@@ -87,15 +113,15 @@ def compare_segmentation():
 def train_data():
     galaxy_images, galaxy_image_names = il.load_images(galaxy_zoo_images_path, images_to_load, 0, random=False)
     # Load the db files and search for a filename
-    galaxy_data = db.get_data(galaxy_image_names)
+    galaxy_data = db.get_data2(galaxy_image_names)
 
     _, indexed_labels = db.get_labels(galaxy_data)
-    galaxy_images, indexed_labels = ds.remove_class(galaxy_images, indexed_labels, 5)
+    # galaxy_images, indexed_labels = ds.remove_class(galaxy_images, indexed_labels, 5)
 
     # Get images rotated by the parameter number of times and the labels multiplied by the same number
-    galaxy_images, indexed_labels = il.get_rotations(galaxy_images, indexed_labels, rotations)
-    galaxy_images = galaxy_images / 255.0
-
+    # galaxy_images, indexed_labels = il.get_rotations(galaxy_images, indexed_labels, rotations)
+    # galaxy_images = galaxy_images / 255.0
+    #
     ts.train(galaxy_images, indexed_labels, galaxy_image_names)
 
 
@@ -156,32 +182,6 @@ def evaluate_data(evaluation_images_number, model_name=None, evaluate=True):
     #         plot.display_image(galaxy_images[i], get_class_name(indexed_labels[i]))
 
 
-def live_detection():
-    # cv2.namedWindow("preview")
-    vc = cv2.VideoCapture(0)
-    if vc.isOpened():  # try to get the first frame
-        rval, frame = vc.read()
-    else:
-        rval = False
-
-    while rval:
-        rval, frame = vc.read()
-        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        # original_image = ip.apply_filters(frame, gaussian=False)
-        f, axarr = plt.subplots(1)
-        axarr.imshow(gray_frame, cmap='gray')
-        cp.identify_and_outline_objects(gray_frame, plt=plt, outline=True, save=True)
-        plt.show()
-        # cv2.imshow("preview", grayFrame)
-
-        key = cv2.waitKey(20)
-        if key == 27:  # exit on ESC
-            break
-
-    vc.release()
-    # cv2.destroyWindow("preview")
-
-
 def cluster_classification(evaluation_images_number):
     galaxy_images, galaxy_image_names = il.load_images(galaxy_zoo_images_path, evaluation_images_number, 0, random=False)
     galaxy_images_r, galaxy_image_names_r = il.load_images(galaxy_zoo_images_path, round(evaluation_images_number/5), 0, random=True)
@@ -201,11 +201,11 @@ def cluster_classification(evaluation_images_number):
 
 
 if __name__ == '__main__':
-    # train_data()
+    train_data()
     # evaluate_image("valid/L_CUSTOM_2_3_64_90240_10ep_96.37acc.h5")
     # evaluate_single_image("6 - prep", "valid/L_CUSTOM_2_3_64_90240_10ep_96.37acc.h5")
     # evaluate_single_image("6marc - prep", "L_RESNET_1_0_64_169176_10ep.h5")
-    evaluate_data(5000, "valid/L_CUSTOM_2_3_64_90240_10ep_96.37acc.h5")
+    # evaluate_data(5000, "valid/L_CUSTOM_2_3_64_90240_10ep_96.37acc.h5")
     # cluster_classification(1000)
     # live_detection()
 

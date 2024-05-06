@@ -22,10 +22,11 @@ segmentation_path = "images/output/segmentation/"
 def load_images(folder_path, images_to_load=-1, offset=0, random=False):
     # Used only to check for unique items
     file_mappings, csv_data = db_manager.get_csv_raw()
+    galaxyzoo_images = []
 
     # global galaxyzoo_images
     # galaxyzoo_images = np.empty(shape=(images_to_load, number_of_pixels, number_of_pixels), dtype=np.int8)
-    galaxyzoo_images = np.empty(shape=(images_to_load, number_of_pixels, number_of_pixels), dtype=np.ubyte)
+    # galaxyzoo_images = np.empty(shape=(images_to_load, number_of_pixels, number_of_pixels), dtype=np.ubyte)
     final_path = Path(__file__).parent / folder_path
 
     before = time.time()
@@ -51,7 +52,8 @@ def load_images(folder_path, images_to_load=-1, offset=0, random=False):
             # np.add(galaxyzoo_images, load_image_cv(folder_path + image_name))
             # Used to check the uniqueness in the db
             # if db_manager.is_data_valid(image_name, file_mappings, csv_data):
-            galaxyzoo_images[image_names.index(image_name)] = load_image_cv(folder_path + image_name)
+
+            # galaxyzoo_images[image_names.index(image_name)] = load_image_cv(folder_path + image_name)
             loaded_image_names.append(image_name)
             loaded_images += 1
 
@@ -66,7 +68,8 @@ def load_images(folder_path, images_to_load=-1, offset=0, random=False):
             # np.add(galaxyzoo_images, load_image_cv(folder_path + image_name))
             # Used to check the uniqueness in the db
             # if db_manager.is_data_valid(image_name, file_mappings, csv_data):
-            galaxyzoo_images[image_names.index(image_name)] = load_image_cv(folder_path + image_name)
+
+            # galaxyzoo_images[image_names.index(image_name)] = load_image_cv(folder_path + image_name)
             loaded_image_names.append(image_name)
             loaded_images += 1
             if images_to_load == image_number:

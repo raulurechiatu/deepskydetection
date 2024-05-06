@@ -207,37 +207,37 @@ def train(images, labels, image_names):
     print(images.shape)
     MODEL_SAVE_NAME += str(len(images))
 
-    data_train, data_test, labels_train, labels_test = train_test_split(images,
-                                                                        labels,
-                                                                        test_size=0.1,
-                                                                        shuffle=True,
-                                                                        random_state=1
-                                                                        # shuffle=False,
-                                                                        # random_state=None
-                                                                        )
-    del images, labels
-    # for i in range(10):
-    #     plot_builder.display_image(data_train[i], str(labels_train[i]) + " - " + image_names[i])
-    validation_set_size = 300
-    data_validate = data_train[-validation_set_size:]
-    labels_validate = labels_train[-validation_set_size:]
-    data_train = data_train[:-validation_set_size]
-    labels_train = labels_train[:-validation_set_size]
-
-    # reshape data for model compatibility
-    data_train = data_train.reshape(-1, 1, number_of_pixels, number_of_pixels)
-    data_test_orig = np.copy(data_test)
-    data_validate_orig = np.copy(data_validate)
-    data_test = data_test.reshape(-1, 1, number_of_pixels, number_of_pixels)
-    data_validate = data_validate.reshape(-1, 1, number_of_pixels, number_of_pixels)
-
-    # data_train = tf.expand_dims(data_train, axis=-1)
-    # data_test = tf.expand_dims(data_test, axis=-1)
-    # data_validate = tf.expand_dims(data_validate, axis=-1)
-
-    # print(data_validate.shape, labels_validate.shape, data_train.shape, labels_train.shape, data_test.shape, labels_test.shape)
-
-    train_model(data_train, data_test, labels_train, labels_test, data_validate, labels_validate, number_of_classes)
-
-    evaluate(data_test_orig, np.where(labels_test == 1)[1], manual=True)
-    evaluate(data_validate_orig, np.where(labels_validate == 1)[1], manual=True)
+    # data_train, data_test, labels_train, labels_test = train_test_split(images,
+    #                                                                     labels,
+    #                                                                     test_size=0.1,
+    #                                                                     shuffle=True,
+    #                                                                     random_state=1
+    #                                                                     # shuffle=False,
+    #                                                                     # random_state=None
+    #                                                                     )
+    # del images, labels
+    # # for i in range(10):
+    # #     plot_builder.display_image(data_train[i], str(labels_train[i]) + " - " + image_names[i])
+    # validation_set_size = 300
+    # data_validate = data_train[-validation_set_size:]
+    # labels_validate = labels_train[-validation_set_size:]
+    # data_train = data_train[:-validation_set_size]
+    # labels_train = labels_train[:-validation_set_size]
+    #
+    # # reshape data for model compatibility
+    # data_train = data_train.reshape(-1, 1, number_of_pixels, number_of_pixels)
+    # data_test_orig = np.copy(data_test)
+    # data_validate_orig = np.copy(data_validate)
+    # data_test = data_test.reshape(-1, 1, number_of_pixels, number_of_pixels)
+    # data_validate = data_validate.reshape(-1, 1, number_of_pixels, number_of_pixels)
+    #
+    # # data_train = tf.expand_dims(data_train, axis=-1)
+    # # data_test = tf.expand_dims(data_test, axis=-1)
+    # # data_validate = tf.expand_dims(data_validate, axis=-1)
+    #
+    # # print(data_validate.shape, labels_validate.shape, data_train.shape, labels_train.shape, data_test.shape, labels_test.shape)
+    #
+    # train_model(data_train, data_test, labels_train, labels_test, data_validate, labels_validate, number_of_classes)
+    #
+    # evaluate(data_test_orig, np.where(labels_test == 1)[1], manual=True)
+    # evaluate(data_validate_orig, np.where(labels_validate == 1)[1], manual=True)

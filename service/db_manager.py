@@ -11,6 +11,7 @@ db_location = 'resources/galaxyzoo2/data/'
 csv_filename_mappings = 'gz2_filename_mapping.csv'
 csv_db = 'gz2_hart16.csv'
 filenames, filename_headers, db_data, db_data_headers = [], [], [], []
+global_file_mappings, global_csv_data = [], []
 
 class_to_number_mapping = {
     'sc': 0,
@@ -93,6 +94,45 @@ def get_data(file_names):
     return data
 
 
+def get_data2(file_names):
+    before = time.time()
+
+    file_mappings, csv_data = get_csv_raw()
+    data = []
+    skipped_files = []
+    skip_reason = ""
+    obj_ids = []
+    before_ids = time.time()
+    # for i in range(len(file_names)):
+    #     file_names[i] = file_names[i][:-4]
+    # for file_mapping in file_mappings:
+    #     if file_mapping[2] in file_names:
+    #         obj_ids.append(file_mapping[0])
+
+    for file_name in file_names:
+        file_name = file_name[:-4]
+        # OBS. To remove a lot of the time needed for the search remove the next two lines
+        # Get the object id from the file mappings to the data object id
+        try:
+            obj_ids.append(next(file_mapping for file_mapping in file_mappings if file_name == file_mapping[2])[0])
+        except Exception as e:
+            skipped_files.append(file_name)
+            skip_reason = e
+
+    after_ids = time.time()
+    print("Id mapping took ", (after_ids-before_ids), "s")
+
+    for csv_item in csv_data:
+        if csv_item[0] in obj_ids:
+            data.append(csv_item)
+    after = time.time()
+    print("Data mapping took", (after-before), "s for ", len(data), " valid results")
+    print("Skipped ", skipped_files, " because of ", skip_reason)
+    # images_to_load = len(data)
+
+    return data
+
+
 def is_data_valid(file_name, file_mappings, csv_data):
     file_name = file_name[:-4]
     # OBS. To remove a lot of the time needed for the search remove the next two lines
@@ -115,18 +155,21 @@ def is_data_valid(file_name, file_mappings, csv_data):
 
 
 def get_csv_raw():
+    global global_file_mappings, global_csv_data
+    if len(global_file_mappings) > 0 and len(global_csv_data) > 0:
+        return global_file_mappings, global_csv_data
     mappings_path = Path(__file__).parent.parent / db_location / csv_filename_mappings
-    file_mappings, _ = read_csv(mappings_path)
+    global_file_mappings, _ = read_csv(mappings_path)
     data_path = Path(__file__).parent.parent / db_location / csv_db
-    csv_data, csv_headers = read_csv(data_path)
-    return file_mappings, csv_data
+    global_csv_data, csv_headers = read_csv(data_path)
+    return global_file_mappings, global_csv_data
 
 
 def get_labels(galaxy_data):
     labels = []
     before = time.time()
     for data in galaxy_data:
-        labels.append(get_label_value(data))
+        labels.append(get_labels_10_class(data))
     after = time.time()
 
     print("Labels were assigned to images successfully in " + str(after-before))
@@ -163,6 +206,8 @@ def get_labels_10_class(data):
     elif data[6].startswith('Sb'):
         return 4
     elif data[6].startswith('Sc'):
+        return 9
+    elif data[6].startswith('Sd'):
         return 5
     elif data[6].startswith('SBa'):
         return 6
@@ -170,10 +215,32 @@ def get_labels_10_class(data):
         return 7
     elif data[6].startswith('SBc'):
         return 8
-    elif '(I)' in data[6] or '(i)' in data[6]:
-        return 9
-    else:
+    elif data[6].startswith('SBd'):
+        return 11
+    elif data[6].startswith('Sen'):
+        return 12
+    elif data[6].startswith('Ser'):
+        return 13
+    elif data[6].startswith('Seb'):
+        return 14
+    elif data[6].startswith('A'):
         return 10
+    # elif '(I)' in data[6] or '(i)' in data[6]:
+    #     return 9
+    else:
+        return 15
+
+
+def get_classification_data(galaxy_data, as_array=False):
+    classification_data = []
+    for data in galaxy_data:
+        if as_array:
+            classification_data.append([float(data[11]), float(data[17]), float(data[29]), float(data[35]),
+                                        float(data[53]), float(data[101]), float(data[107]), float(data[113])])
+        else:
+            classification_data.append((float(data[11]), float(data[17]), float(data[29]), float(data[35]),
+                                        float(data[53]), float(data[101]), float(data[107]), float(data[113])))
+    return classification_data
 
 
 def get_galaxy_classes(galaxy_data, rotations=4):
