@@ -29,7 +29,7 @@ stars_images_path = "../resources/stars/"
 
 # Worked with 10k
 images_to_load = -1
-rotations = 12
+rotations = 4
 
 error_threshold = 0.85
 # error_threshold = 0.0016
@@ -108,6 +108,14 @@ def compare_segmentation():
         print("Execution time for algorithm ", algorithm, " is ", exec_time, "s")
     else:
         print("For the execution time please call the method with the value of the display_images parameter set to True!")
+
+
+def train_data2():
+    galaxy_images, labels = db.get_labels_and_images(1000)
+    galaxy_images, labels = ds.remove_class(galaxy_images, labels, 10)
+    # galaxy_images, labels = il.get_rotations(galaxy_images, labels, rotations)
+    galaxy_images = galaxy_images / 255.0
+    ts.train(galaxy_images, labels)
 
 
 def train_data():
@@ -201,7 +209,7 @@ def cluster_classification(evaluation_images_number):
 
 
 if __name__ == '__main__':
-    train_data()
+    train_data2()
     # evaluate_image("valid/L_CUSTOM_2_3_64_90240_10ep_96.37acc.h5")
     # evaluate_single_image("6 - prep", "valid/L_CUSTOM_2_3_64_90240_10ep_96.37acc.h5")
     # evaluate_single_image("6marc - prep", "L_RESNET_1_0_64_169176_10ep.h5")

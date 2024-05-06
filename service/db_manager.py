@@ -2,14 +2,17 @@ import csv
 import re
 import time
 from pathlib import Path
+from service import image_loader
 
 from main_ai import images_to_load
 
 # from pandas import read_csv
 
 db_location = 'resources/galaxyzoo2/data/'
+galaxy_zoo_images_path = "../resources/galaxyzoo2/images_gz2/images/"
 csv_filename_mappings = 'gz2_filename_mapping.csv'
 csv_db = 'gz2_hart16.csv'
+extension = '.jpg'
 filenames, filename_headers, db_data, db_data_headers = [], [], [], []
 global_file_mappings, global_csv_data = [], []
 
@@ -350,3 +353,41 @@ def read_csv(path, files_to_load=-1):
     print("Loaded", files_to_load, "rows for csv file", path, "in", (after-before), "s")
 
     return data, headers
+
+
+def get_labels_and_images(images_per_class):
+    file_names, galaxy_images_ids, galaxy_images, labels = [], [], [], []
+    assigned_labels = {}
+    file_mappings, csv_data = get_csv_raw()
+    before = time.time()
+    for csv_item in csv_data:
+        label = get_labels_10_class(csv_item)
+        if label not in assigned_labels:
+            assigned_labels[label] = 1
+        if assigned_labels[label] >= images_per_class:
+            continue
+        assigned_labels[label] += 1
+        labels.append(label)
+        obj_id = csv_item[0]
+        galaxy_images_ids.append(obj_id)
+        file_name = next(file_mapping for file_mapping in file_mappings if obj_id == file_mapping[0])[2]
+        file_names.append(file_name)
+        # image = np.empty(shape=(1, number_of_pixels, number_of_pixels), dtype=np.ubyte)
+        try:
+            image = image_loader.load_image_cv(galaxy_zoo_images_path + file_name + extension)
+        except Exception as e:
+            print("Skipping file " + obj_id)
+            galaxy_images_ids.pop()
+            file_names.pop()
+            labels.pop()
+            assigned_labels[label] -= 1
+            continue
+        galaxy_images.append(image_loader.load_image_cv(galaxy_zoo_images_path + file_name + extension))
+
+    after = time.time()
+    print("Loaded " + str(images_per_class) + " images and their labels in " + str(after-before) + "s")
+    # print(galaxy_images)
+    print(len(labels))
+    print(len(galaxy_images))
+
+    return galaxy_images, labels

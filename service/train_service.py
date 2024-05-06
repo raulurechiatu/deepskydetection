@@ -23,12 +23,12 @@ number_of_pixels = 64
 
 # MODEL_SAVE_NAME = "L_CUSTOM_1_3 _" + str(number_of_pixels) + "_"
 # MODEL_SAVE_NAME = "L_CUSTOM_2_4_" + str(number_of_pixels) + "_"
-MODEL_SAVE_NAME = "L_CUSTOM_3_4_" + str(number_of_pixels) + "_"
+# MODEL_SAVE_NAME = "L_CUSTOM_3_4_" + str(number_of_pixels) + "_"
 # MODEL_SAVE_NAME = "L_CUSTOM_4_1_" + str(number_of_pixels) + "_"
-# MODEL_SAVE_NAME = "L_RESNET_1_2_" + str(number_of_pixels) + "_"
+# MODEL_SAVE_NAME = "L_RESNET_0_0_" + str(number_of_pixels) + "_"
 # MODEL_SAVE_NAME = "L_INCEPTION_1_1_" + str(number_of_pixels) + "_"
 # MODEL_SAVE_NAME = "L_VGG_1_1_" + str(number_of_pixels) + "_"
-# MODEL_SAVE_NAME = "L_DENSENET_1_2_" + str(number_of_pixels) + "_"
+MODEL_SAVE_NAME = "L_DENSENET_0_0_" + str(number_of_pixels) + "_"
 # MODEL_SAVE_NAME = "L_MOBILE_1_1_" + str(number_of_pixels) + "_"
 # MODEL_SAVE_NAME = "L_EFFICIENT_1_0_" + str(number_of_pixels) + "_"
 model = None
@@ -39,14 +39,14 @@ def train_model(data_train, data_test, labels_train, labels_test, data_validate,
     global MODEL_SAVE_NAME, model
     keras.backend.set_image_data_format('channels_first')
     # model = NetworkArchitectures.custom_v4(number_of_pixels, number_of_classes)
-    model = NetworkArchitectures.custom_v3(number_of_pixels, number_of_classes)
+    # model = NetworkArchitectures.custom_v3(number_of_pixels, number_of_classes)
     # model = NetworkArchitectures.custom_v2(number_of_pixels, number_of_classes)
     # model = NetworkArchitectures.custom_v1(number_of_pixels, number_of_classes)
     # model = NetworkArchitectures.create_ResNet50V2(number_of_pixels, number_of_classes)
     # model = NetworkArchitectures.create_inception(number_of_pixels, number_of_classes)
     # model = NetworkArchitectures.create_mobile(number_of_pixels, number_of_classes)
     # model = NetworkArchitectures.create_vgg16(number_of_pixels, number_of_classes)
-    # model = NetworkArchitectures.create_densenet(number_of_pixels, number_of_classes)
+    model = NetworkArchitectures.create_densenet(number_of_pixels, number_of_classes)
     # model = NetworkArchitectures.create_efficient(number_of_pixels, number_of_classes)
 
     model.compile(
@@ -60,7 +60,7 @@ def train_model(data_train, data_test, labels_train, labels_test, data_validate,
                  keras.metrics.AUC()]
     )
 
-    epochs = 20
+    epochs = 10
     result = model.fit(data_train,
                        labels_train,
                        epochs=epochs,
@@ -73,7 +73,7 @@ def train_model(data_train, data_test, labels_train, labels_test, data_validate,
 
     # save model
     MODEL_SAVE_NAME += "_" + str(epochs) + "ep"
-    model.save('models/' + MODEL_SAVE_NAME + ".h5")
+    model.save('models/10_class/' + MODEL_SAVE_NAME + ".h5")
 
     # original precision eval implementation
     loss, acc, prec, rec, f1, auc = model.evaluate(data_test, labels_test, verbose=1)
@@ -188,7 +188,7 @@ def evaluate_image(img):
     return np.argmax(get_model().predict(final_images, verbose=0), axis=-1)
 
 
-def train(images, labels, image_names):
+def train(images, labels, image_names=[]):
     global MODEL_SAVE_NAME
     # labels = [0] * len(galaxy_images) + [1] * len(nebulae_images) + [2] * len(star_images)
     # labels = np.array(labels)
@@ -207,37 +207,37 @@ def train(images, labels, image_names):
     print(images.shape)
     MODEL_SAVE_NAME += str(len(images))
 
-    # data_train, data_test, labels_train, labels_test = train_test_split(images,
-    #                                                                     labels,
-    #                                                                     test_size=0.1,
-    #                                                                     shuffle=True,
-    #                                                                     random_state=1
-    #                                                                     # shuffle=False,
-    #                                                                     # random_state=None
-    #                                                                     )
-    # del images, labels
-    # # for i in range(10):
-    # #     plot_builder.display_image(data_train[i], str(labels_train[i]) + " - " + image_names[i])
-    # validation_set_size = 300
-    # data_validate = data_train[-validation_set_size:]
-    # labels_validate = labels_train[-validation_set_size:]
-    # data_train = data_train[:-validation_set_size]
-    # labels_train = labels_train[:-validation_set_size]
-    #
-    # # reshape data for model compatibility
-    # data_train = data_train.reshape(-1, 1, number_of_pixels, number_of_pixels)
-    # data_test_orig = np.copy(data_test)
-    # data_validate_orig = np.copy(data_validate)
-    # data_test = data_test.reshape(-1, 1, number_of_pixels, number_of_pixels)
-    # data_validate = data_validate.reshape(-1, 1, number_of_pixels, number_of_pixels)
-    #
-    # # data_train = tf.expand_dims(data_train, axis=-1)
-    # # data_test = tf.expand_dims(data_test, axis=-1)
-    # # data_validate = tf.expand_dims(data_validate, axis=-1)
-    #
-    # # print(data_validate.shape, labels_validate.shape, data_train.shape, labels_train.shape, data_test.shape, labels_test.shape)
-    #
-    # train_model(data_train, data_test, labels_train, labels_test, data_validate, labels_validate, number_of_classes)
-    #
-    # evaluate(data_test_orig, np.where(labels_test == 1)[1], manual=True)
-    # evaluate(data_validate_orig, np.where(labels_validate == 1)[1], manual=True)
+    data_train, data_test, labels_train, labels_test = train_test_split(images,
+                                                                        labels,
+                                                                        test_size=0.1,
+                                                                        shuffle=True,
+                                                                        random_state=1
+                                                                        # shuffle=False,
+                                                                        # random_state=None
+                                                                        )
+    del images, labels
+    # for i in range(10):
+    #     plot_builder.display_image(data_train[i], str(labels_train[i]) + " - " + image_names[i])
+    validation_set_size = 300
+    data_validate = data_train[-validation_set_size:]
+    labels_validate = labels_train[-validation_set_size:]
+    data_train = data_train[:-validation_set_size]
+    labels_train = labels_train[:-validation_set_size]
+
+    # reshape data for model compatibility
+    data_train = data_train.reshape(-1, 1, number_of_pixels, number_of_pixels)
+    data_test_orig = np.copy(data_test)
+    data_validate_orig = np.copy(data_validate)
+    data_test = data_test.reshape(-1, 1, number_of_pixels, number_of_pixels)
+    data_validate = data_validate.reshape(-1, 1, number_of_pixels, number_of_pixels)
+
+    # data_train = tf.expand_dims(data_train, axis=-1)
+    # data_test = tf.expand_dims(data_test, axis=-1)
+    # data_validate = tf.expand_dims(data_validate, axis=-1)
+
+    # print(data_validate.shape, labels_validate.shape, data_train.shape, labels_train.shape, data_test.shape, labels_test.shape)
+
+    train_model(data_train, data_test, labels_train, labels_test, data_validate, labels_validate, number_of_classes)
+
+    evaluate(data_test_orig, np.where(labels_test == 1)[1], manual=True)
+    evaluate(data_validate_orig, np.where(labels_validate == 1)[1], manual=True)
