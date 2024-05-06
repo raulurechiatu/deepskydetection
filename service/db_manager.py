@@ -206,6 +206,31 @@ def get_labels_10_class(data):
     elif data[6].startswith('Sb'):
         return 4
     elif data[6].startswith('Sc'):
+        return 5
+    elif data[6].startswith('SBa'):
+        return 6
+    elif data[6].startswith('SBb'):
+        return 7
+    elif data[6].startswith('SBc'):
+        return 8
+    elif '(I)' in data[6] or '(i)' in data[6]:
+        return 9
+    else:
+        return 10
+
+
+def get_labels_15_class(data):
+    if data[6].startswith('Ei'):
+        return 0
+    elif data[6].startswith('Er'):
+        return 1
+    elif data[6].startswith('Ec'):
+        return 2
+    elif data[6].startswith('Sa'):
+        return 3
+    elif data[6].startswith('Sb'):
+        return 4
+    elif data[6].startswith('Sc'):
         return 9
     elif data[6].startswith('Sd'):
         return 5
