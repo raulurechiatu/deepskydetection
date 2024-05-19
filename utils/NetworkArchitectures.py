@@ -2,6 +2,7 @@ import keras
 import tensorflow as tf
 from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization, GlobalAveragePooling2D
 from keras.models import Sequential
+from keras.layers import add, ZeroPadding2D, concatenate, Conv2D, Attention
 import keras.initializers.initializers_v1 as initializers
 
 from keras.layers import Input
@@ -86,6 +87,93 @@ def custom_v4(number_of_pixels, classes):
     # Fully Connected Layers
     model.add(Dense(64, activation='relu'))
 
+    model.add(Dense(classes, activation='softmax'))
+
+    return model
+
+
+def custom_v6(number_of_pixels, classes):
+    # Input layer (assuming grayscale images)
+    input_shape = (1, number_of_pixels, number_of_pixels)
+
+    # Define the improved CNN architecture
+    model = Sequential()
+
+    # Convolutional Layer 1
+    model.add(Conv2D(64, (5, 5), activation='relu', input_shape=input_shape))
+    model.add(MaxPooling2D((2, 2)))
+
+    # Convolutional Layer 2
+    model.add(Conv2D(128, (5, 5), activation='relu'))
+    model.add(MaxPooling2D((2, 2)))
+
+    # Convolutional Layer 3
+    model.add(Conv2D(256, (5, 5), activation='relu'))
+    model.add(GlobalAveragePooling2D())
+
+    # Fully Connected Layers
+    model.add(Dense(128, activation='relu'))
+    model.add(Dense(64, activation='relu'))
+
+    # Output Layer
+    model.add(Dense(classes, activation='softmax'))
+
+    return model
+
+
+def custom_v5(number_of_pixels, classes):
+    # Input layer (assuming grayscale images)
+    input_shape = (1, number_of_pixels, number_of_pixels)
+
+    # Define the improved CNN architecture
+    model = Sequential()
+
+    # model.add(Conv2D(32, (5, 5), activation='relu', input_shape=input_shape))
+    # model.add(BatchNormalization())
+    # model.add(MaxPooling2D((2, 2)))
+
+    # Convolutional Layer 1
+    # model.add(Conv2D(32, (5, 5), activation='relu', input_shape=input_shape))
+
+    # Convolutional Layer 1
+    model.add(Conv2D(64, (5, 5), activation='relu', input_shape=input_shape))
+    model.add(BatchNormalization())
+    model.add(MaxPooling2D((2, 2)))
+    model.add(Dropout(0.3))
+
+    # Convolutional Layer 2
+    model.add(Conv2D(128, (5, 5), activation='relu'))
+    model.add(MaxPooling2D((2, 2)))
+    model.add(Dropout(0.2))
+
+    # Convolutional Layer 3
+    model.add(Conv2D(256, (5, 5), activation='relu'))
+    model.add(BatchNormalization())
+    model.add(MaxPooling2D((2, 2)))
+    model.add(Dropout(0.1))
+
+    # Convolutional Layer 3
+    # model.add(Conv2D(512, (5, 5), activation='relu'))
+    # model.add(MaxPooling2D((2, 2)))
+
+    # Convolutional Layer 3
+    # model.add(Conv2D(256, (5, 5), activation='relu'))
+    # model.add(BatchNormalization())
+
+    model.add(GlobalAveragePooling2D())
+
+    # Convolutional Layer 4
+    # model.add(Conv2D(512, (5, 5), activation='relu'))
+    # model.add(BatchNormalization())
+    # model.add(GlobalAveragePooling2D())
+
+    # Fully Connected Layers
+    model.add(Dense(256, activation='relu'))
+    model.add(Dense(128, activation='relu'))
+    model.add(Dense(64, activation='relu'))
+    model.add(Dropout(0.1))
+
+    # Output Layer
     model.add(Dense(classes, activation='softmax'))
 
     return model

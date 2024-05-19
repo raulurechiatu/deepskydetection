@@ -19,18 +19,20 @@ from utils import NetworkArchitectures
 # The image is firstly cropped to this size and after this is resized to the next value
 crop_size = 180
 # Original size 414
-number_of_pixels = 64
+number_of_pixels = 180
 
-# MODEL_SAVE_NAME = "L_CUSTOM_1_3 _" + str(number_of_pixels) + "_"
-# MODEL_SAVE_NAME = "L_CUSTOM_2_4_" + str(number_of_pixels) + "_"
-# MODEL_SAVE_NAME = "L_CUSTOM_3_4_" + str(number_of_pixels) + "_"
-# MODEL_SAVE_NAME = "L_CUSTOM_4_1_" + str(number_of_pixels) + "_"
-# MODEL_SAVE_NAME = "L_RESNET_0_0_" + str(number_of_pixels) + "_"
-# MODEL_SAVE_NAME = "L_INCEPTION_1_1_" + str(number_of_pixels) + "_"
-# MODEL_SAVE_NAME = "L_VGG_1_1_" + str(number_of_pixels) + "_"
-MODEL_SAVE_NAME = "L_DENSENET_0_0_" + str(number_of_pixels) + "_"
+# MODEL_SAVE_NAME = "L_CUSTOM_1_4_" + str(number_of_pixels) + "_"
+# MODEL_SAVE_NAME = "L_CUSTOM_2_2_" + str(number_of_pixels) + "_"
+# MODEL_SAVE_NAME = "L_CUSTOM_3_3_" + str(number_of_pixels) + "_"
+# MODEL_SAVE_NAME = "L_CUSTOM_4_5_" + str(number_of_pixels) + "_"
+# MODEL_SAVE_NAME = "L_CUSTOM_5_4_" + str(number_of_pixels) + "_"
+# MODEL_SAVE_NAME = "L_CUSTOM_6_7_" + str(number_of_pixels) + "_"
+# MODEL_SAVE_NAME = "L_RESNET_1_0_" + str(number_of_pixels) + "_"
+# MODEL_SAVE_NAME = "L_INCEPTION_1_0_" + str(number_of_pixels) + "_"
+MODEL_SAVE_NAME = "L_VGG_0_0_" + str(number_of_pixels) + "_"
+# MODEL_SAVE_NAME = "L_DENSENET_1_0_" + str(number_of_pixels) + "_"
 # MODEL_SAVE_NAME = "L_MOBILE_1_1_" + str(number_of_pixels) + "_"
-# MODEL_SAVE_NAME = "L_EFFICIENT_1_0_" + str(number_of_pixels) + "_"
+# MODEL_SAVE_NAME = "L_EFFICIENT_1_1_" + str(number_of_pixels) + "_"
 model = None
 
 
@@ -38,6 +40,8 @@ def train_model(data_train, data_test, labels_train, labels_test, data_validate,
     # configuring keras backend format for channel position
     global MODEL_SAVE_NAME, model
     keras.backend.set_image_data_format('channels_first')
+    # model = NetworkArchitectures.custom_v6(number_of_pixels, number_of_classes)
+    # model = NetworkArchitectures.custom_v5(number_of_pixels, number_of_classes)
     # model = NetworkArchitectures.custom_v4(number_of_pixels, number_of_classes)
     # model = NetworkArchitectures.custom_v3(number_of_pixels, number_of_classes)
     # model = NetworkArchitectures.custom_v2(number_of_pixels, number_of_classes)
@@ -45,9 +49,11 @@ def train_model(data_train, data_test, labels_train, labels_test, data_validate,
     # model = NetworkArchitectures.create_ResNet50V2(number_of_pixels, number_of_classes)
     # model = NetworkArchitectures.create_inception(number_of_pixels, number_of_classes)
     # model = NetworkArchitectures.create_mobile(number_of_pixels, number_of_classes)
-    # model = NetworkArchitectures.create_vgg16(number_of_pixels, number_of_classes)
-    model = NetworkArchitectures.create_densenet(number_of_pixels, number_of_classes)
+    model = NetworkArchitectures.create_vgg16(number_of_pixels, number_of_classes)
+    # model = NetworkArchitectures.create_densenet(number_of_pixels, number_of_classes)
     # model = NetworkArchitectures.create_efficient(number_of_pixels, number_of_classes)
+
+    es = keras.callbacks.EarlyStopping(monitor='val_loss', patience=5)
 
     model.compile(
         optimizer=tf.optimizers.Adam(),
@@ -60,23 +66,23 @@ def train_model(data_train, data_test, labels_train, labels_test, data_validate,
                  keras.metrics.AUC()]
     )
 
-    epochs = 10
+    epochs = 100
     result = model.fit(data_train,
                        labels_train,
                        epochs=epochs,
                        validation_data=(data_test, labels_test),
-                       batch_size=16
-                       # callbacks=[es]
+                       batch_size=16,
+                       callbacks=[es]
                        # callbacks=[metrics]
                        # shuffle = True # optional parameter for composites only
                        )
 
-    # save model
-    MODEL_SAVE_NAME += "_" + str(epochs) + "ep"
-    model.save('models/10_class/' + MODEL_SAVE_NAME + ".h5")
-
     # original precision eval implementation
     loss, acc, prec, rec, f1, auc = model.evaluate(data_test, labels_test, verbose=1)
+
+    # save model
+    MODEL_SAVE_NAME += "_" + str(epochs) + "ep" + "_" + str(acc) + "acc"
+    model.save('models/10_class/' + MODEL_SAVE_NAME + ".h5")
 
     print('\nTest loss:', loss)
     print('\nTest accuracy:', acc)

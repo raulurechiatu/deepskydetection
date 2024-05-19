@@ -222,6 +222,29 @@ def get_labels_10_class(data):
         return 10
 
 
+def get_class_name_10_class(class_number):
+    if class_number == 0:
+        return "Ei"
+    if class_number == 1:
+        return "Er"
+    if class_number == 2:
+        return "Ec"
+    if class_number == 3:
+        return "Sa"
+    if class_number == 4:
+        return "Sb"
+    if class_number == 5:
+        return "Sc"
+    if class_number == 6:
+        return "SBa"
+    if class_number == 7:
+        return "SBb"
+    if class_number == 8:
+        return "SBc"
+    if class_number == 9:
+        return "Irr"
+
+
 def get_labels_15_class(data):
     if data[6].startswith('Ei'):
         return 0

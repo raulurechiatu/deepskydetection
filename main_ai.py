@@ -29,7 +29,7 @@ stars_images_path = "../resources/stars/"
 
 # Worked with 10k
 images_to_load = -1
-rotations = 4
+rotations = 12
 
 error_threshold = 0.85
 # error_threshold = 0.0016
@@ -111,11 +111,15 @@ def compare_segmentation():
 
 
 def train_data2():
-    galaxy_images, labels = db.get_labels_and_images(1000)
+    # BEST 1500
+    galaxy_images, labels = db.get_labels_and_images(5)
     galaxy_images, labels = ds.remove_class(galaxy_images, labels, 10)
     # galaxy_images, labels = il.get_rotations(galaxy_images, labels, rotations)
-    galaxy_images = galaxy_images / 255.0
-    ts.train(galaxy_images, labels)
+    for i in range(len(galaxy_images)):
+        plot.display_image(galaxy_images[i], db.get_class_name_10_class(labels[i]) + "(" + str(labels[i]) + ")")
+    # galaxy_images = galaxy_images / 255.0
+
+    # ts.train(galaxy_images, labels)
 
 
 def train_data():
