@@ -1,4 +1,5 @@
 import gc
+import math
 import os
 
 import numpy as np
@@ -182,6 +183,69 @@ def evaluate(images, labels, manual=False):
     conf_mat = confusion_matrix(labels, test_prediction)
     print(conf_mat)
 
+    # df = pd.DataFrame(result.history)
+    # df.plot(figsize=(8, 5))
+    # plt.grid(True)
+    # plt.gca().set_ylim(0, 1)
+    # plt.show()
+
+
+def evaluate2(images, labels, model_name=None, manual=False):
+    global model
+    model = get_model(model_name, True)
+
+    images = images.reshape(-1, 1, number_of_pixels, number_of_pixels)
+
+    if not manual and labels is not None:
+        number_of_classes = len(set(labels))
+        categorical_labels = to_categorical(labels, number_of_classes)
+        loss, acc, prec, rec, f1, auc = model.evaluate(images, categorical_labels, verbose=1)
+        print(f"Loss: {loss}, acc: {acc}, precision: {prec}, recall: {rec}, f1: {f1}, auc: {auc}")
+
+    # for multi-class classification
+    scores = model.predict(images)
+    test_prediction = np.argmax(scores, axis=-1)
+
+    if labels is not None:
+        print(classification_report(labels, test_prediction))
+        correct_predictions = []
+        prediction_mistakes = []
+        results = []
+        for label_id in range(len(labels)):
+            correct_predictions.append(labels[label_id] == test_prediction[label_id])
+            if labels[label_id] != test_prediction[label_id]:
+                prediction_mistakes.append((labels[label_id], test_prediction[label_id]))
+            results.append((labels[label_id], test_prediction[label_id]))
+        print("correct prediction: ", correct_predictions)
+        print("prediction mistakes ", str(len(prediction_mistakes)), " (expected, actual): ", prediction_mistakes)
+        print("computed accuracy: ", sum(bool(x) for x in correct_predictions) / len(correct_predictions))
+
+    print("data_test.shape: ", images.shape)
+    print("test_prediction.shape: ", test_prediction.shape)
+    # print("test_prediction: ", test_prediction)
+    number_of_classes = len(set(labels))
+    # roc curve for classes
+    fpr = {}
+    tpr = {}
+    thresh = {}
+
+    ext_tpr = []
+    ext_fpr = []
+    for i in range(number_of_classes):
+        fpr[i], tpr[i], thresh[i] = metrics.roc_curve(labels, scores[:,i], pos_label=i)
+        step = math.floor(len(fpr[i])/8)
+        for j in range(8):
+            if j != 8:
+                ext_tpr.append(tpr[i][j*step])
+                ext_fpr.append(fpr[i][j*step])
+        ext_tpr.append(tpr[i][len(tpr[i])-1])
+        ext_fpr.append(fpr[i][len(fpr[i])-1])
+    print(ext_tpr)
+    print(ext_fpr)
+
+    plot_builder.plot_roc_curve(fpr, tpr, number_of_classes)
+
+    return results
     # df = pd.DataFrame(result.history)
     # df.plot(figsize=(8, 5))
     # plt.grid(True)
