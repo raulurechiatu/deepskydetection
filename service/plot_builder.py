@@ -1,3 +1,5 @@
+from random import randrange, uniform
+
 import matplotlib.pyplot as plt
 from pathlib import Path
 import matplotlib.image as mpimg
@@ -119,7 +121,7 @@ def plot_roc_curve(fpr, tpr, number_of_classes):
     # plotting
     fpr_mean = mean(fpr)
     tpr_mean = mean(tpr)
-    colors = get_random_colors()
+    colors = get_random_colors(number_of_classes)
 
     for i in range(number_of_classes):
         label = 'Class ' + str(i)
@@ -142,16 +144,24 @@ def plot_roc_curve(fpr, tpr, number_of_classes):
     plt.show()
 
 
-def get_random_colors():
-    clrs = np.linspace(0, 1, 18)
-    np.random.shuffle(clrs)
+def get_random_colors(number_of_classes):
     colors = []
-    for i in range(0, 72, 4):
-        idx = np.arange( 0, 18, 1 )
-        np.random.shuffle(idx)
-        r = clrs[idx[0]]
-        g = clrs[idx[1]]
-        b = clrs[idx[2]]
-        a = clrs[idx[3]]
-        colors.append([r, g, b, a])
+    for i in range(number_of_classes):
+        r = uniform(0, 1)
+        g = uniform(0, 1)
+        b = uniform(0, 1)
+        rand_color = [r, g, b, 1]
+        colors.append(rand_color)
     return colors
+    # clrs = np.linspace(0, 1, 18)
+    # np.random.shuffle(clrs)
+    # colors = []
+    # for i in range(0, 72, 4):
+    #     idx = np.arange( 0, 18, 1 )
+    #     np.random.shuffle(idx)
+    #     r = clrs[idx[0]]
+    #     g = clrs[idx[1]]
+    #     b = clrs[idx[2]]
+    #     a = clrs[idx[3]]
+    #     colors.append([r, g, b, a])
+    # return colors

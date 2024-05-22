@@ -133,10 +133,10 @@ def configure_gpu():
             print("Error: ".e)
 
 
-def get_model(custom_metrics=False):
+def get_model(model_name, custom_metrics=False):
     global model
     if model is None:
-        model = keras.models.load_model("models/" + MODEL_SAVE_NAME + ".h5")
+        model = keras.models.load_model("models/10_class/" + model_name, custom_objects={"f1_m": f1_m })
     if custom_metrics:
         model.compile(
             optimizer=tf.optimizers.Adam(),
@@ -219,6 +219,8 @@ def evaluate2(images, labels, model_name=None, manual=False):
         print("correct prediction: ", correct_predictions)
         print("prediction mistakes ", str(len(prediction_mistakes)), " (expected, actual): ", prediction_mistakes)
         print("computed accuracy: ", sum(bool(x) for x in correct_predictions) / len(correct_predictions))
+        conf_mat = confusion_matrix(labels, test_prediction)
+        print(conf_mat)
 
     print("data_test.shape: ", images.shape)
     print("test_prediction.shape: ", test_prediction.shape)

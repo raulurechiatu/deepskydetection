@@ -112,8 +112,8 @@ def compare_segmentation():
 
 def train_data2():
     # BEST 1500
-    galaxy_images, labels = db.get_labels_and_images(5)
-    galaxy_images, labels = ds.remove_class(galaxy_images, labels, 10)
+    galaxy_images, labels, galaxy_data = db.get_labels_and_images(5)
+    galaxy_images, labels, galaxy_data = ds.remove_class(galaxy_images, labels, galaxy_data, 10)
     # galaxy_images, labels = il.get_rotations(galaxy_images, labels, rotations)
     for i in range(len(galaxy_images)):
         plot.display_image(galaxy_images[i], db.get_class_name_10_class(labels[i]) + "(" + str(labels[i]) + ")")
@@ -169,29 +169,29 @@ def evaluate_image(model_name=None):
     plt.show()
 
 
-def evaluate_data(evaluation_images_number, model_name=None, evaluate=True):
-    galaxy_images, galaxy_image_names = il.load_images(galaxy_zoo_images_path, evaluation_images_number, 0, random=False)
-    galaxy_images_r, galaxy_image_names_r = il.load_images(galaxy_zoo_images_path, round(evaluation_images_number/5), 0, random=True)
-    galaxy_images = np.concatenate((galaxy_images, galaxy_images_r))
-    galaxy_image_names = np.concatenate((galaxy_image_names, galaxy_image_names_r))
-    galaxy_data = db.get_data(galaxy_image_names)
+def evaluate_data(evaluation_images_number_per_class, model_name=None, evaluate=True):
+    # galaxy_images, galaxy_image_names = il.load_images(galaxy_zoo_images_path, evaluation_images_number, 0, random=False)
+    # galaxy_images_r, galaxy_image_names_r = il.load_images(galaxy_zoo_images_path, round(evaluation_images_number/5), 0, random=True)
+    # galaxy_images = np.concatenate((galaxy_images, galaxy_images_r))
+    # galaxy_image_names = np.concatenate((galaxy_image_names, galaxy_image_names_r))
+    galaxy_images, labels, galaxy_data = db.get_labels_and_images(evaluation_images_number_per_class)
+    galaxy_images, labels, galaxy_data = ds.remove_class(galaxy_images, labels, galaxy_data, 10)
 
-    _, indexed_labels = db.get_labels(galaxy_data)
-    galaxy_images, indexed_labels = ds.remove_class(galaxy_images, indexed_labels, 5)
+    # _, indexed_labels = db.get_labels(galaxy_data)
     galaxy_images = galaxy_images / 255.0
-    eval.stochastic_dominance(galaxy_images, indexed_labels)
+    # eval.stochastic_dominance(galaxy_images, indexed_labels)
 
-    # if evaluate:
-    #     results = ts.evaluate(galaxy_images, indexed_labels, model_name, manual=True)
-    #     print("results(predicted, actual): ", results)
-    #     for i in range(len(results)):
-    #         title = "Predicted: " + str(results[i][0]) + " (" + get_class_name(results[i][0]) + ")  |  " + " Actual: " + str(results[i][1]) + " (" + get_class_name(results[i][1]) + ")"
-    #         plot.display_image(galaxy_images[i], title)
-    # else:
-    #     for i in range(len(galaxy_images)):
-    #         if indexed_labels[i] is None:
-    #             continue
-    #         plot.display_image(galaxy_images[i], get_class_name(indexed_labels[i]))
+    if evaluate:
+        results = ts.evaluate2(galaxy_images, labels, model_name, manual=True)
+        print("results(predicted, actual): ", results)
+        for i in range(len(results)):
+            title = "Predicted: " + str(results[i][0]) + " (" + db.get_class_name_10_class(results[i][0]) + ")  |  " + " Actual: " + str(results[i][1]) + " (" + db.get_class_name_10_class(results[i][1]) + ")"
+            plot.display_image(galaxy_images[i], title)
+    else:
+        for i in range(len(galaxy_images)):
+            if labels[i] is None:
+                continue
+            plot.display_image(galaxy_images[i], get_class_name(labels[i]))
 
 
 def cluster_classification(evaluation_images_number):
@@ -213,11 +213,17 @@ def cluster_classification(evaluation_images_number):
 
 
 if __name__ == '__main__':
-    train_data2()
-    # evaluate_image("valid/L_CUSTOM_2_3_64_90240_10ep_96.37acc.h5")
+    galaxy_images, labels, galaxy_data = db.get_labels_and_images(5)
+    galaxy_images, labels, galaxy_data = ds.remove_class(galaxy_images, labels, galaxy_data, 10)
+    db.save_images_and_data(galaxy_images, galaxy_data)
+
+    # train_data2()
+    # evaluate_image("valid/L_CUSTOM_6_6_180_55704_64ep_0.9203015565872192acc.h5")
     # evaluate_single_image("6 - prep", "valid/L_CUSTOM_2_3_64_90240_10ep_96.37acc.h5")
     # evaluate_single_image("6marc - prep", "L_RESNET_1_0_64_169176_10ep.h5")
-    # evaluate_data(5000, "valid/L_CUSTOM_2_3_64_90240_10ep_96.37acc.h5")
+
+    # evaluate_data(500, "valid/L_CUSTOM_6_6_180_55704_64ep_0.9203015565872192acc.h5", True)
+
     # cluster_classification(1000)
     # live_detection()
 

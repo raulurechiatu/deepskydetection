@@ -268,3 +268,7 @@ def download_segmented_objects(image_name):
         im_name = segmentation_path + image_name + "/" + str(index) + '_' + str(len(image)) + ".png"
         mpimg.imsave(im_name, image, cmap='gray')
         index += 1
+
+
+def save_image_cv2(image, image_name):
+    cv2.imwrite("dataset/" + image_name, image)

@@ -4,20 +4,21 @@ from numpy import delete
 from keras import backend as K
 
 
-def remove_class(data, labels, label_to_remove):
+def remove_class(images, labels, data, label_to_remove):
     before = time.time()
     indexes_to_remove = []
-    for index in range(len(data)):
+    for index in range(len(images)):
         if labels[index] == label_to_remove:
             indexes_to_remove.append(index)
 
     for remove_index in sorted(indexes_to_remove, reverse=True):
+        images = delete(images, remove_index, 0)
         data = delete(data, remove_index, 0)
         del labels[remove_index]
 
     after = time.time()
     print("Removed the last class (other) in " + str(after - before))
-    return data, labels
+    return images, labels, data
 
 
 def recall_m(y_true, y_pred):

@@ -2,6 +2,9 @@ import csv
 import re
 import time
 from pathlib import Path
+
+import pandas as pd
+
 from service import image_loader
 
 from main_ai import images_to_load
@@ -379,7 +382,7 @@ def read_csv(path, files_to_load=-1):
 
 
 def get_labels_and_images(images_per_class):
-    file_names, galaxy_images_ids, galaxy_images, labels = [], [], [], []
+    file_names, galaxy_images_ids, galaxy_images, galaxy_data, labels = [], [], [], [], []
     assigned_labels = {}
     file_mappings, csv_data = get_csv_raw()
     before = time.time()
@@ -405,6 +408,7 @@ def get_labels_and_images(images_per_class):
             labels.pop()
             assigned_labels[label] -= 1
             continue
+        galaxy_data.append(csv_item)
         galaxy_images.append(image_loader.load_image_cv(galaxy_zoo_images_path + file_name + extension))
 
     after = time.time()
@@ -413,4 +417,15 @@ def get_labels_and_images(images_per_class):
     print(len(labels))
     print(len(galaxy_images))
 
-    return galaxy_images, labels
+    return galaxy_images, labels, galaxy_data
+
+
+def save_images_and_data(images, data):
+    csv_data = []
+
+    for i in range(len(images)):
+        image_loader.save_image_cv2(images[i], data[i][0])
+        csv_data.append(data[i])
+
+    df = pd.DataFrame(csv_data)
+    df.to_csv('dataset/data.csv', index=False)
