@@ -213,9 +213,9 @@ def cluster_classification(evaluation_images_number):
 
 
 if __name__ == '__main__':
-    galaxy_images, labels, galaxy_data = db.get_labels_and_images(5)
+    galaxy_images, labels, galaxy_data = db.get_labels_and_images(1000)
     galaxy_images, labels, galaxy_data = ds.remove_class(galaxy_images, labels, galaxy_data, 10)
-    db.save_images_and_data(galaxy_images, galaxy_data)
+    db.save_images_and_data(galaxy_images, labels, galaxy_data)
 
     # train_data2()
     # evaluate_image("valid/L_CUSTOM_6_6_180_55704_64ep_0.9203015565872192acc.h5")

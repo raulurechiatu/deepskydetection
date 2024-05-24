@@ -390,7 +390,7 @@ def get_labels_and_images(images_per_class):
         label = get_labels_10_class(csv_item)
         if label not in assigned_labels:
             assigned_labels[label] = 1
-        if assigned_labels[label] >= images_per_class:
+        if assigned_labels[label] > images_per_class:
             continue
         assigned_labels[label] += 1
         labels.append(label)
@@ -420,11 +420,11 @@ def get_labels_and_images(images_per_class):
     return galaxy_images, labels, galaxy_data
 
 
-def save_images_and_data(images, data):
+def save_images_and_data(images, labels, data):
     csv_data = []
 
     for i in range(len(images)):
-        image_loader.save_image_cv2(images[i], data[i][0])
+        image_loader.save_image_cv2(images[i], str(labels[i]), data[i][0])
         csv_data.append(data[i])
 
     df = pd.DataFrame(csv_data)

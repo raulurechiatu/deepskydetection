@@ -270,5 +270,7 @@ def download_segmented_objects(image_name):
         index += 1
 
 
-def save_image_cv2(image, image_name):
-    cv2.imwrite("dataset/" + image_name, image)
+def save_image_cv2(image, image_class, image_name):
+    image_name += image_name + ".png"
+    final_path = Path(__file__).parent.parent / "dataset" / image_class / image_name
+    cv2.imwrite(str(final_path), image)
