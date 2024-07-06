@@ -289,11 +289,13 @@ def get_classification_data(galaxy_data, as_array=False):
     classification_data = []
     for data in galaxy_data:
         if as_array:
-            classification_data.append([float(data[11]), float(data[17]), float(data[29]), float(data[35]),
-                                        float(data[53]), float(data[101]), float(data[107]), float(data[113])])
+            classification_data.append([float(data[100]), float(data[101])])
+            # classification_data.append([float(data[11]), float(data[17]), float(data[29]), float(data[35]),
+            #                             float(data[53]), float(data[101]), float(data[107]), float(data[113])])
         else:
-            classification_data.append((float(data[11]), float(data[17]), float(data[29]), float(data[35]),
-                                        float(data[53]), float(data[101]), float(data[107]), float(data[113])))
+            classification_data.append((float(data[100]), float(data[101])))
+            # classification_data.append((float(data[11]), float(data[17]), float(data[29]), float(data[35]),
+            #                             float(data[53]), float(data[101]), float(data[107]), float(data[113])))
     return classification_data
 
 

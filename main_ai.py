@@ -202,20 +202,20 @@ def cluster_classification(evaluation_images_number):
     galaxy_data = db.get_data(galaxy_image_names)
 
     _, indexed_labels = db.get_labels(galaxy_data)
-    # galaxy_data = db.remove_non_float(galaxy_data)
-    # galaxy_images, indexed_labels = ds.remove_class(galaxy_images, indexed_labels, 5)
+    # galaxy_images, labels, galaxy_data = db.get_labels_and_images(evaluation_images_number)
+    # galaxy_images, labels, galaxy_data = ds.remove_class(galaxy_images, labels, galaxy_data, 10)
     classification_data = db.get_classification_data(galaxy_data, True)
     classification_data, labels = classifier.classify2(classification_data)
     # print(labels)
     # print(len(labels))
-    print(indexed_labels)
-    print(len(indexed_labels))
+    # print(indexed_labels)
+    # print(len(indexed_labels))
 
 
 if __name__ == '__main__':
-    galaxy_images, labels, galaxy_data = db.get_labels_and_images(1000)
-    galaxy_images, labels, galaxy_data = ds.remove_class(galaxy_images, labels, galaxy_data, 10)
-    db.save_images_and_data(galaxy_images, labels, galaxy_data)
+    # galaxy_images, labels, galaxy_data = db.get_labels_and_images(1000)
+    # galaxy_images, labels, galaxy_data = ds.remove_class(galaxy_images, labels, galaxy_data, 10)
+    # db.save_images_and_data(galaxy_images, labels, galaxy_data)
 
     # train_data2()
     # evaluate_image("valid/L_CUSTOM_6_6_180_55704_64ep_0.9203015565872192acc.h5")
@@ -224,7 +224,7 @@ if __name__ == '__main__':
 
     # evaluate_data(500, "valid/L_CUSTOM_6_6_180_55704_64ep_0.9203015565872192acc.h5", True)
 
-    # cluster_classification(1000)
+    cluster_classification(1000)
     # live_detection()
 
     # print(multiprocessing.cpu_count())

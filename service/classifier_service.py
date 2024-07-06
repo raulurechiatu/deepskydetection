@@ -2,7 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from scipy.cluster.hierarchy import dendrogram, linkage
-from sklearn.cluster import AgglomerativeClustering
+from sklearn.cluster import AgglomerativeClustering, KMeans
+from sklearn.metrics import silhouette_score
 from sklearn.preprocessing import StandardScaler
 from scipy.cluster.hierarchy import fcluster
 
@@ -24,9 +25,10 @@ def classify2(data):
     scaled_data = scaler.fit_transform(data)
     distance_matrix = linkage(scaled_data, method='ward')
 
-    cluster_labels = fcluster(distance_matrix, 5, criterion='distance')
+    cluster_labels = fcluster(distance_matrix, 10, criterion='distance')
+    score = silhouette_score(distance_matrix, cluster_labels[:-1], metric="euclidean")
+    print("Silhouette score: " + str(score))
     show_dendrogram_plot(distance_matrix)
-
     # Add cluster labels as a new column to your data
     # data.insert(len(data), cluster_labels)
 
